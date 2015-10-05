@@ -1,0 +1,48 @@
+/*
+ * test.cpp
+ *
+ *  Created on: 2015Äê10ÔÂ3ÈÕ
+ *      Author: vito
+ */
+
+
+#include "stdlib.h"
+//#include "string.h"
+#include "iostream"
+#include "string.h"
+using namespace std;
+
+
+#include <fstream>
+ int main(int argc, char * argv[]){
+    ifstream table;                            // 1. Create instance
+    table.open(argv[1]);                   // 2. Open the file
+    char line[200];
+
+    string x;
+    getline(table, x);
+
+   if(x.find("ffff") == -1)
+   {
+	   printf("No ffff\n");
+   }
+   printf("pos %d", x.find("cccc"));
+    printf("%s\n", line);
+    string t1 = "This, sss,, ddd";
+    for(std::string::iterator it = t1.begin(); it != t1.end(); it++)
+      {
+	std::cout<<*it << "\n";
+      }
+
+    string xx = "";
+    printf("xx ##%s##\n", xx.c_str());
+    xx = xx + " BBBBBBBBBEBBB";
+    printf("xx ##%s##\n", xx.c_str());
+    printf("xx size %d\n", strlen(xx.c_str()));
+    string x1 = "ABC";
+    for(string::iterator it = x1.begin(); it!=x1.end(); it++)
+      {
+        if(strcmp(*it,'B')) printf("Found B!\n");
+	printf("%c ",*it);
+      }
+ }
