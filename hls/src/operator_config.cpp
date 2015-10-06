@@ -39,7 +39,7 @@ void operator_config(signal_list signal_list, op_list op_list)
 					signal_list.push_back(s);
 
 					o.name = count + "_tmp_reg";
-					o.signs = sign;
+					o.signs = unsign;
 					o.width = 0;
 					o.from.push_back(s);
 					o.to.push_back(*it2);
@@ -47,7 +47,9 @@ void operator_config(signal_list signal_list, op_list op_list)
 					op_list.push_back(o);
 
 					it2->from.erase(it);
+					it2->from.push_back(o);
 					it->to.erase(it2);
+					it->to.push_back(s);
 					reg_add +=1;
 				}
 			}
@@ -55,7 +57,51 @@ void operator_config(signal_list signal_list, op_list op_list)
 	}
 
 
+    for(list<signal>::iterator it = signal_list.begin(); it!= signal_list.end(); it++)
+    {
+    	if (it->type == "OUTPUT")
+    	{
+    		for(list<op>::iterator it2 = it->from.begin();  it2 != it->from.begin(); it2++)
+    		{
+    			if (it->type != "REG")
+    			{
+    				stringstream ss;
+    				ss << reg_add;
+    				string count;
+    				count << ss;
+    				signal s = new signal();
+    				op o = new op();
 
+    				s.name = count + "_tmp_signal";
+    				s.type = "WIRE";
+    				s.signs = it->signs;
+    				s.width = it->width;
+    				s.to.push_back(o);
+    				s.from.push_back(*it2);
+    				signal_list.push_back(s);
+
+    				o.name = count + "_tmp_reg";
+    				o.width =0;
+    				o.signs = unsign;
+    				o.from.push_back(s);
+    				o.to.push_back(*it);
+    				o.type = "REG";
+    				op_list.push_back(o);
+
+    				it2->to.erase(it);
+    				it->from.erase(it2);
+    				it2->to.push_back(s);
+    				it->from.push_back(o);
+
+    				reg_add +=1;
+    			}
+    		}
+
+
+
+
+    	}
+    }
 
 
 	for(list<op>::iterator it = op_list.begin()   ; it!= op_list.end(); it++)
@@ -69,11 +115,11 @@ void operator_config(signal_list signal_list, op_list op_list)
 		for(list<signal>::iterator it2 = curr_op.from.begin(); it2 != curr_op.from.end(); it2++)
 		{
 			signal curr_signal = *it2;
-			if(curr_op.type == "COMP")
+			if(curr_op.type.find("COMP"))
 			{
 				if (curr_signal.width > width)	width = curr_signal.width;
 			}
-			if (curr_op.signs == sign)
+			if (curr_signal.signs == sign)
 			{
 				input_sign = sign;
 			}
@@ -83,13 +129,13 @@ void operator_config(signal_list signal_list, op_list op_list)
 		for(list<string>::iterator it2 = curr_op.to.begin(); it2 != curr_op.to.end(); it2++)
 		{
 			signal curr_signal = *it2;
-			if(curr_op.type != "COMP")
+			if(curr_op.type.find("COMP") ==string::npos)
 			{
 				if(curr_signal.width > width)		width = curr_signal.width;
 			}
 		}
-
-		it->signs = input_sign;
+		if(it->type == "REG" || it->type == "SHR" || it->type == "SHL")		it->signs = unsign;
+		else		it->signs = input_sign;
 		it->width = width;
 	}
 }

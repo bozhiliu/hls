@@ -9,7 +9,6 @@
 
 
 
-
 void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::string> tokens)
 {
 	string buffer = "";
@@ -151,12 +150,12 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 					constant_one = true;
 					op_list.back().name = op_list.back().name+"1";
 					if(op_list.back().type == "ADD")	op_list.back().type = "INC";	continue;
-					if(op_list.back().type == "SUB")	op_list.back().type = "INC";	continue;
+					if(op_list.back().type == "SUB")		op_list.back().type = "INC";	continue;
 				}
 				for(vector<string>::iterator it = op_type.begin(); it != op_type.end(); it++)
 				{
 					string curr_token = *it2;
-					op curr_op = *it;
+					string curr_op = *it;
 					int 	pos = std::distance(op_type.begin(), it);
 					if(curr_token == op_token_array[pos])
 					{
@@ -168,6 +167,7 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 						op_found.name = op_count_name+curr_op;
 						op_count ++;
 						op_found.type = *it;
+						if(curr_op  == "COMP")		op_found.type = op_found.type + curr_token;
 						op_list.push_back(op_found);
 						continue;
 					}

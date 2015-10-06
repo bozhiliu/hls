@@ -48,14 +48,4 @@ int main(int argc, char* argv[]){
 
 	verilog_write(argv[1], outfile, netlist_signal, netlist_op);
 
-	infile.close();
-	outfile.close();
-
-
-
-
-
-
-
-
 }
