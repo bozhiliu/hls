@@ -12,6 +12,7 @@
 #include "operator_config.hpp"
 #include "verilog_write.hpp"
 #include "fstream"
+#include "vector"
 
 //#include "vector"
 using namespace std;
@@ -24,10 +25,10 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 
-	size_type.assign(size_type_array[0], size_type_array[11]);
-	op_type.assign(op_type_array[0], op_type_array[11]);
-	signals_type.assign(signals_type_array[0], signals_type_array[3]);
-	delimiters.assign(delimiters_array[0], delimiters_array[2]);
+	copy(size_type_array, size_type_array+11, size_type.begin());
+	copy(op_type_array, op_type_array+11, op_type.begin());
+	copy(signals_type_array, signals_type_array+3, signals_type.begin());
+	copy(delimiters_array, delimiters_array+2, delimiters.begin());
 
 	ifstream infile(argv[1]);
 	ofstream outfile(argv[2]);

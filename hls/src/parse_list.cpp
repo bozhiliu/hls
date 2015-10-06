@@ -41,7 +41,7 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 	int op_count = 0;
 	bool signs;
 	int width;
-	size_info curr_info {unsign, -1};
+	size_info curr_info (unsign, -1);
 	string curr_signals_type = "";
 	bool size_found = false;
 	bool signals_type_found = false;
