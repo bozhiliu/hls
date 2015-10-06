@@ -9,7 +9,7 @@
 
 #include "verilog_write.hpp"
 
-void width_extension(ofstream outfile, signals from_first, list<op>::iterator it)
+void width_extension(ofstream& outfile, signals from_first, list<op>::iterator it)
 {
 	if(from_first.width > it->width)
 				{
@@ -32,7 +32,7 @@ void width_extension(ofstream outfile, signals from_first, list<op>::iterator it
 
 
 
-void verilog_write(char * input_name, ofstream outfile, signals_list signals_list, op_list op_list)
+void verilog_write(char * input_name, ofstream& outfile, signals_list signals_list, op_list op_list)
 {
 	outfile << "// Verilog generated from input netlist\n";
 	outfile << "// Netlist file name: " << input_name  << "\n";
@@ -153,8 +153,8 @@ void verilog_write(char * input_name, ofstream outfile, signals_list signals_lis
 		bool signs = it->signs;
 		int width = it->width;
 		string name = it->name;
-		signals from_first = it->from.begin();
-		signals to_first = it->to.begin();
+		signals from_first = *(it->from.begin());
+		signals to_first = *(it->to.begin());
 
 		if(it->type == "REG")
 		{
@@ -163,7 +163,7 @@ void verilog_write(char * input_name, ofstream outfile, signals_list signals_lis
 
 		if(it->type == "ADD" || it->type == "SUB" || it->type == "MUL" || it->type == "DIV" || it->type == "MOD")
 		{
-			signals second = it->from.begin() +1;
+			signals second = *(it->from.begin() ++);
 			if (it->signs == sign)	outfile << "S";
 			outfile << it->type;
 			outfile <<" #(" << width << ") " << name << "(.a(";
@@ -195,7 +195,7 @@ void verilog_write(char * input_name, ofstream outfile, signals_list signals_lis
 
 		if(it->type.find("COMP"))
 		{
-			signals second = it->from.begin()+1;
+			signals second = *(it->from.begin()++);
 			if(it->signs == sign) outfile << "S";
 			outfile << "COMP";
 			outfile << " #(" << width << ") " << name << "(.a(";
@@ -210,8 +210,8 @@ void verilog_write(char * input_name, ofstream outfile, signals_list signals_lis
 
 		if(it->type == "MUX")
 		{
-			signals second = it->from.begin() + 1;
-			signals third = it->from.begin() +2;
+			signals second = *(it->from.begin() ++);
+			signals third = *(it->from.begin() ++ ++);
 			outfile << "MUX2x1 ";
 			outfile << " #(" << width << ") " << name << "(.a(";
 			width_extension(outfile, second, it);
@@ -225,7 +225,7 @@ void verilog_write(char * input_name, ofstream outfile, signals_list signals_lis
 
 		if(it->type == "SHR" || it->type == "SHL")
 		{
-			signals second = it->from.begin() + 1;
+			signals second =*( it->from.begin() ++);
 			outfile << it->type << " #(" << width << ") " << name << "(.a(";
 			width_extension(outfile, from_first, it);
 			outfile << "), sh_amt(" ;

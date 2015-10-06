@@ -26,9 +26,9 @@ void operator_config(signals_list signals_list, op_list op_list)
 					stringstream ss;
 					ss << reg_add;
 					string count;
-					count << ss;
-					signals s = new signals();
-					op o = new op();
+					ss >> count;
+					signals s =*( new signals());
+					op o =*( new op());
 
 					s.name = count + "_tmp_signals";
 					s.signs = it2->signs;
@@ -68,9 +68,9 @@ void operator_config(signals_list signals_list, op_list op_list)
     				stringstream ss;
     				ss << reg_add;
     				string count;
-    				count << ss;
-    				signals s = new signals();
-    				op o = new op();
+    				ss >> count;
+    				signals s =*( new signals());
+    				op o =*( new op());
 
     				s.name = count + "_tmp_signals";
     				s.type = "WIRE";
@@ -126,7 +126,7 @@ void operator_config(signals_list signals_list, op_list op_list)
 		}
 
 		// Find the width of current operator
-		for(list<string>::iterator it2 = curr_op.to.begin(); it2 != curr_op.to.end(); it2++)
+		for(list<signals>::iterator it2 = curr_op.to.begin(); it2 != curr_op.to.end(); it2++)
 		{
 			signals curr_signals = *it2;
 			if(curr_op.type.find("COMP") ==string::npos)
