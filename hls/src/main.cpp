@@ -5,25 +5,28 @@
  *      Author: vito
  */
 
-#include "stdlib.h"
-#include "stdio.h"
+
 #include "data_structs.hpp"
 #include "parse_netlist.hpp"
 #include "operator_config.hpp"
 #include "verilog_write.hpp"
+#include "stdlib.h"
+#include "stdio.h"
 #include "fstream"
 #include "vector"
 
-//#include "vector"
+
 using namespace std;
 int main(int argc, char* argv[]){
-
 
 	if(argc != 3)
 	{
 		printf("Need two arguments! Program exit\n");
 		return 1;
 	}
+
+
+
 
 	copy(size_type_array, size_type_array+11, size_type.begin());
 	copy(op_type_array, op_type_array+11, op_type.begin());
