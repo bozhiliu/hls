@@ -12,7 +12,7 @@
 #include "stdio.h"
 #include "list"
 
-void operator_config(signal_list signal_list, op_list op_list);
+void operator_config(signals_list signals_list, op_list op_list);
 
 
 

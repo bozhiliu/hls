@@ -33,7 +33,7 @@ void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::str
 }
 
 
-int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
+int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 {
 	vector<string> tokens;
 	tokenize(in, delimiters, tokens);
@@ -42,9 +42,9 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 	bool signs;
 	int width;
 	size_info curr_info {sign, -1};
-	string curr_signal_type = "";
+	string curr_signals_type = "";
 	bool size_found = false;
-	bool signal_type_found = false;
+	bool signals_type_found = false;
 	bool op_type_found = false;
 
 	// Find size tokens of current statement
@@ -68,33 +68,33 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 	// Find type tokens of current statement
 	for(vector<string>::iterator it2 = tokens.begin(); it2 != tokens.end(); it2++)
 	{
-		// When signal type determined, consider the rest tokens as signals
-		if(signal_type_found == true)
+		// When signals type determined, consider the rest tokens as signalss
+		if(signals_type_found == true)
 			{
 				string curr_token = *it2;
-				signal  s  = new signal();
+				signals  s  = new signals();
 				s.signs = curr_info.signs;
 				s.width = curr_info.width;
-				s.type.assign(curr_signal_type);
+				s.type.assign(curr_signals_type);
 				s.name.assign(curr_token);
-				signal_list.push_back(s);
+				signals_list.push_back(s);
 				continue;
 			}
-		// Find the signal type
-		for(vector<string>::iterator it = signal_type.begin(); it !=signal_type.end(); it++)
+		// Find the signals type
+		for(vector<string>::iterator it = signals_type.begin(); it !=signals_type.end(); it++)
 			{
 				string curr_type = *it;
 				string curr_token = *it2;
 				if (curr_type == curr_token)
 					{
-						signal_type_found = true;
+						signals_type_found = true;
 						if(size_found == false)
 						{
-							signal_type_found = false;
+							signals_type_found = false;
 							return 1;
 						}
-						int pos = std::distance(signal_type.begin(), it);
-						curr_signal_type = signal_type_array[pos];
+						int pos = std::distance(signals_type.begin(), it);
+						curr_signals_type = signals_type_array[pos];
 						break;
 					}
 			}
@@ -103,39 +103,39 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 	// Find operator tokens of current statement
 	if(tokens[1] == "=")
 	{
-		list<signal> curr_signal_from_list;
-		signal curr_signal_to;
+		list<signals> curr_signals_from_list;
+		signals curr_signals_to;
 		bool reg_statement = true;
 		bool valid_statement = false;
 		bool constant_one = false;
-		// LHS of equation: find the sink signal
-		for(list<signal>::iterator it = signal_list.begin(); it != signal_list.end(); it++)
+		// LHS of equation: find the sink signals
+		for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 		{
-			signal curr_signal = *it;
-			if(tokens[0] == curr_signal.name)
+			signals curr_signals = *it;
+			if(tokens[0] == curr_signals.name)
 			{
 				valid_statement = true;
-				curr_signal_to = curr_signal;
+				curr_signals_to = curr_signals;
 				continue;
 			}
 		}
 
-		// RHS: find the source signals and operator
+		// RHS: find the source signalss and operator
 		for(vector<string>::iterator it2 = tokens[2]; it2 != tokens.end(); it2++)
 		{
 			bool curr_token_found = false;
 
-			// find signals for potential operator
+			// find signalss for potential operator
 			if(curr_token_found == false)
 			{
-				for(list<signal>::iterator it = signal_list.begin(); it != signal_list.end(); it++)
+				for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 				{
 					string curr_token = *it2;
-					signal curr_signal = *it;
-					if (curr_token == curr_signal.name)
+					signals curr_signals = *it;
+					if (curr_token == curr_signals.name)
 					{
 						reg_statement = reg_statement && 1;
-						curr_signal_from_list.push_back(*it);
+						curr_signals_from_list.push_back(*it);
 						curr_token_found = true;
 						continue;
 					}
@@ -189,13 +189,13 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 			op_list.push_back(op_found);
 		}
 
-		// Process the from and to relations between signals and operators
+		// Process the from and to relations between signalss and operators
 		if(valid_statement == true)
 		{
-			op_list.back().to.push_back(curr_signal_to);
-			curr_signal_to.from.push_back(op_list.back());
+			op_list.back().to.push_back(curr_signals_to);
+			curr_signals_to.from.push_back(op_list.back());
 
-			for(list<signal>::iterator it = curr_signal_from_list.begin(); it != curr_signal_from_list.end(); it++)
+			for(list<signals>::iterator it = curr_signals_from_list.begin(); it != curr_signals_from_list.end(); it++)
 			{
 				op_list.back().from.push_back(*it);
 				it->to.push_back(op_list.back());
@@ -205,9 +205,9 @@ int parse_netlist(std::string in, op_list op_list, signal_list signal_list)
 
 
 	size_info curr_info {sign, -1};
-	string curr_signal_type = "";
+	string curr_signals_type = "";
 	bool size_found = false;
-	bool signal_type_found = false;
+	bool signals_type_found = false;
 	bool op_type_found = false;
 	return 0;
 }

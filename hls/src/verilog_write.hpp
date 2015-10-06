@@ -10,7 +10,7 @@
 #include "data_structs.hpp"
 
 
-void verilog_write(char * input_name, ofstream outfile, signal_list signal_list, op_list op_list);
+void verilog_write(char * input_name, ofstream outfile, signals_list signals_list, op_list op_list);
 
 
 

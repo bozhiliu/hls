@@ -11,6 +11,7 @@
 #include "data_structs.hpp"
 #include "operator_config.hpp"
 #include "verilog_write.hpp"
+#include "fstream"
 
 
 //#include "vector"
@@ -26,7 +27,7 @@ int main(int argc, char* argv[]){
 
 	size_type.assign(size_type_array[0], size_type_array[11]);
 	op_type.assign(op_type_array[0], op_type_array[11]);
-	signal_type.assign(signal_type_array[0], signal_type_array[3]);
+	signals_type.assign(signals_type_array[0], signals_type_array[3]);
 	delimiters.assign(delimiters_array[0], delimiters_array[2]);
 
 	ifstream infile(argv[1]);
@@ -34,18 +35,21 @@ int main(int argc, char* argv[]){
 
 
 	list<op> netlist_op;
-	list<signal> netlist_signal;
+	list<signals> netlist_signals;
 
 	string line_in ;
 
 	while(!infile.eof())
 	{
 		getline(infile, line_in);
-		parse_netlist(line_in, netlist_op, netlist_signal);
+		parse_netlist(line_in, netlist_op, netlist_signals);
 	}
 
-	operator_config(netlist_signal, netlist_op);
+	operator_config(netlist_signals, netlist_op);
 
-	verilog_write(argv[1], outfile, netlist_signal, netlist_op);
+	verilog_write(argv[1], outfile, netlist_signals, netlist_op);
+
+	infile.close();
+	outfile.close();
 
 }

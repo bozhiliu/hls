@@ -10,16 +10,16 @@
 
 using namespace std;
 
-void operator_config(signal_list signal_list, op_list op_list)
+void operator_config(signals_list signals_list, op_list op_list)
 {
 	int reg_add = 0;
-	// Check if any non-reg operator output is reg. If so, create a new signal and a REG operator
+	// Check if any non-reg operator output is reg. If so, create a new signals and a REG operator
 	for(list<op>::iterator it = op_list.begin(); it!= op_list.end(); it++)
 	{
 		op curr_op = *it;
 		if(it->type != "REG")
 		{
-			for(list<signal>::iterator it2 = it->to.begin(); it2 != it->to.end(); it2++)
+			for(list<signals>::iterator it2 = it->to.begin(); it2 != it->to.end(); it2++)
 			{
 				if (it2->type == "REG")
 				{
@@ -27,16 +27,16 @@ void operator_config(signal_list signal_list, op_list op_list)
 					ss << reg_add;
 					string count;
 					count << ss;
-					signal s = new signal();
+					signals s = new signals();
 					op o = new op();
 
-					s.name = count + "_tmp_signal";
+					s.name = count + "_tmp_signals";
 					s.signs = it2->signs;
 					s.type = "WIRE";
 					s.from.push_back(*it);
 					s.to.push_back(o);
 					s.width = it2->width;
-					signal_list.push_back(s);
+					signals_list.push_back(s);
 
 					o.name = count + "_tmp_reg";
 					o.signs = unsign;
@@ -57,7 +57,7 @@ void operator_config(signal_list signal_list, op_list op_list)
 	}
 
 
-    for(list<signal>::iterator it = signal_list.begin(); it!= signal_list.end(); it++)
+    for(list<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
     {
     	if (it->type == "OUTPUT")
     	{
@@ -69,16 +69,16 @@ void operator_config(signal_list signal_list, op_list op_list)
     				ss << reg_add;
     				string count;
     				count << ss;
-    				signal s = new signal();
+    				signals s = new signals();
     				op o = new op();
 
-    				s.name = count + "_tmp_signal";
+    				s.name = count + "_tmp_signals";
     				s.type = "WIRE";
     				s.signs = it->signs;
     				s.width = it->width;
     				s.to.push_back(o);
     				s.from.push_back(*it2);
-    				signal_list.push_back(s);
+    				signals_list.push_back(s);
 
     				o.name = count + "_tmp_reg";
     				o.width =0;
@@ -112,14 +112,14 @@ void operator_config(signal_list signal_list, op_list op_list)
 
 
 		// Find the sign of current operator
-		for(list<signal>::iterator it2 = curr_op.from.begin(); it2 != curr_op.from.end(); it2++)
+		for(list<signals>::iterator it2 = curr_op.from.begin(); it2 != curr_op.from.end(); it2++)
 		{
-			signal curr_signal = *it2;
+			signals curr_signals = *it2;
 			if(curr_op.type.find("COMP"))
 			{
-				if (curr_signal.width > width)	width = curr_signal.width;
+				if (curr_signals.width > width)	width = curr_signals.width;
 			}
-			if (curr_signal.signs == sign)
+			if (curr_signals.signs == sign)
 			{
 				input_sign = sign;
 			}
@@ -128,10 +128,10 @@ void operator_config(signal_list signal_list, op_list op_list)
 		// Find the width of current operator
 		for(list<string>::iterator it2 = curr_op.to.begin(); it2 != curr_op.to.end(); it2++)
 		{
-			signal curr_signal = *it2;
+			signals curr_signals = *it2;
 			if(curr_op.type.find("COMP") ==string::npos)
 			{
-				if(curr_signal.width > width)		width = curr_signal.width;
+				if(curr_signals.width > width)		width = curr_signals.width;
 			}
 		}
 		if(it->type == "REG" || it->type == "SHR" || it->type == "SHL")		it->signs = unsign;

@@ -16,7 +16,7 @@
 
 using namespace std;
 
-void parse_netlist(std::string in, op_list op_list, signal_list signal_list);
+void parse_netlist(std::string in, op_list op_list, signals_list signals_list);
 
 std::vector<std::string> find_size(std::string);
 
