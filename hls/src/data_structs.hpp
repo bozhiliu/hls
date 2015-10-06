@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <stdlib.h>
+#include "stdio.h"
 
 using namespace std;
 
@@ -56,11 +57,11 @@ size_info size_info_array[] = {int1_info, int2_info, int8_info, int16_info, int3
 
 
 std::vector<char> delimiters;
-std::string delimiters_array[] = {
-		","  ,
-		" "  ,
-		";" ,
-		":"
+char delimiters_array[] = {
+		','  ,
+		' '  ,
+		';' ,
+		':'
 };
 struct op;
 //struct signals;

@@ -15,7 +15,7 @@ void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::str
 	for(int count=0; count < in.length(); count++)
 	{
 		bool find = false;
-		for(const std::vector<char>::iterator it = delimiters.begin(); it != delimiters.end(); it++)
+		for(std::vector<char>::iterator it = delimiters.begin(); it != delimiters.end(); it++)
 		{
 			if(in[count] == *it)
 			{
@@ -41,7 +41,7 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 	int op_count = 0;
 	bool signs;
 	int width;
-	size_info curr_info {sign, -1};
+	size_info curr_info {unsign, -1};
 	string curr_signals_type = "";
 	bool size_found = false;
 	bool signals_type_found = false;
@@ -72,7 +72,7 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 		if(signals_type_found == true)
 			{
 				string curr_token = *it2;
-				signals  s  = new signals();
+				signals  s  = *(new signals());
 				s.signs = curr_info.signs;
 				s.width = curr_info.width;
 				s.type.assign(curr_signals_type);
@@ -121,7 +121,7 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 		}
 
 		// RHS: find the source signalss and operator
-		for(vector<string>::iterator it2 = tokens[2]; it2 != tokens.end(); it2++)
+		for(vector<string>::iterator it2 = tokens.begin()+2; it2 != tokens.end(); it2++)
 		{
 			bool curr_token_found = false;
 
@@ -161,9 +161,9 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 					{
 						reg_statement = false;
 						op_type_found = true;
-						op op_found = new op();
+						op op_found =*( new op());
 						string op_count_name = "";		stringstream ss;
-						ss << op_count;		op_count_name << ss; 		op_count_name = op_count_name + "_";
+						ss << op_count;		ss >> op_count_name ; 		op_count_name = op_count_name + "_";
 						op_found.name = op_count_name+curr_op;
 						op_count ++;
 						op_found.type = *it;
@@ -180,9 +180,9 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 		// After processing RHS, deal with registers
 		if(reg_statement == true)
 		{
-			op op_found = new op();
+			op op_found = *(new op());
 			string op_count_name = "";		stringstream ss;
-			ss << op_count;		op_count_name << ss; 		op_count_name = op_count_name + "_";
+			ss << op_count;		ss>> op_count_name ; 		op_count_name = op_count_name + "_";
 			op_found.name = op_count_name + "REG";
 			op_count ++;
 			op_found.type = "REG";
@@ -204,10 +204,11 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 	}
 
 
-	size_info curr_info {sign, -1};
-	string curr_signals_type = "";
-	bool size_found = false;
-	bool signals_type_found = false;
-	bool op_type_found = false;
+	curr_info.signs = unsign;
+	curr_info.width = -1;
+	curr_signals_type = "";
+	size_found = false;
+	signals_type_found = false;
+	op_type_found = false;
 	return 0;
 }

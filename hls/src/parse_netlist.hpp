@@ -8,15 +8,14 @@
 #ifndef PARSE_NETLIST_HPP_
 #define PARSE_NETLIST_HPP_
 #include "data_structs.hpp"
-#include "stdlib.h"
-#include "stdio.h"
 #include "algorithm"
+#include "sstream"
 
 
 
 using namespace std;
 
-void parse_netlist(std::string in, op_list op_list, signals_list signals_list);
+int parse_netlist(std::string in, op_list op_list, signals_list signals_list);
 
 std::vector<std::string> find_size(std::string);
 

@@ -7,12 +7,11 @@
 
 #include "stdlib.h"
 #include "stdio.h"
-#include "parse_netlist.hpp"
 #include "data_structs.hpp"
+#include "parse_netlist.hpp"
 #include "operator_config.hpp"
 #include "verilog_write.hpp"
 #include "fstream"
-
 
 //#include "vector"
 using namespace std;

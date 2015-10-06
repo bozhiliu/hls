@@ -8,9 +8,7 @@
 #ifndef OPERATOR_CONFIG_HPP_
 #define OPERATOR_CONFIG_HPP_
 #include "data_structs.hpp"
-#include "stdlib.h"
-#include "stdio.h"
-#include "list"
+
 
 void operator_config(signals_list signals_list, op_list op_list);
 
