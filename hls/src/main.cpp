@@ -44,6 +44,7 @@ void print_path(critical_pair pair){
 		curr_vertex = curr_vertex->pred.begin();
 //		vertex_op tmp_vertex = *curr_vertex.pred.begin();
 	}
+	printf("%s\n", curr_vertex->name.c_str());
 }
 
 
