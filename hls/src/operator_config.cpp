@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void operator_config(signals_list signals_list, op_list op_list)
+void operator_config(signals_list& signals_list, op_list& op_list)
 {
 	int reg_add = 0;
 	// Check if any non-reg operator output is reg. If so, create a new signals and a REG operator
@@ -96,10 +96,6 @@ void operator_config(signals_list signals_list, op_list op_list)
     				reg_add +=1;
     			}
     		}
-
-
-
-
     	}
     }
 
@@ -114,9 +110,11 @@ void operator_config(signals_list signals_list, op_list op_list)
 		// Find the sign of current operator
 		for(list<signals>::iterator it2 = curr_op.from.begin(); it2 != curr_op.from.end(); it2++)
 		{
+
 			signals curr_signals = *it2;
-			if(curr_op.type.find("COMP"))
+			if(curr_op.type.find("COMP") != curr_op.type.npos)
 			{
+
 				if (curr_signals.width > width)	width = curr_signals.width;
 			}
 			if (curr_signals.signs == sign)
@@ -129,11 +127,14 @@ void operator_config(signals_list signals_list, op_list op_list)
 		for(list<signals>::iterator it2 = curr_op.to.begin(); it2 != curr_op.to.end(); it2++)
 		{
 			signals curr_signals = *it2;
-			if(curr_op.type.find("COMP") ==string::npos)
+//			printf("curr op %s output signal width %d\n",curr_op.name.c_str(), it2->width);
+			if(curr_op.type.find("COMP") ==curr_op.type.npos)
 			{
+
 				if(curr_signals.width > width)		width = curr_signals.width;
 			}
 		}
+//		printf("Op sign %d width %d\n", input_sign, width);
 		if(it->type == "REG" || it->type == "SHR" || it->type == "SHL")		it->signs = unsign;
 		else		it->signs = input_sign;
 		it->width = width;

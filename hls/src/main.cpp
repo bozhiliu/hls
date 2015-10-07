@@ -10,11 +10,12 @@
 #include "parse_netlist.hpp"
 #include "operator_config.hpp"
 #include "verilog_write.hpp"
+#include "critical_path.hpp"
 #include "stdlib.h"
 #include "stdio.h"
 #include "fstream"
 #include "vector"
-//#define DEBUG
+#define DEBUG
 
 using namespace std;
 
@@ -22,18 +23,28 @@ using namespace std;
 void print_op(list<op> lin){
 	for(list<op>::iterator it = lin.begin(); it != lin.end(); it++)
 	{
-		printf("Type %s, Name %s\n", it->type.c_str(), it->name.c_str());
+		printf("Type %s, Name %s Width %d Sign %d From size %d  To size %d\n", it->type.c_str(), it->name.c_str(), it->width, it->signs, it->from.size(), it->to.size());
 	}
 }
 
 void print_signals(list<signals> lin){
 	for(list<signals>::iterator it = lin.begin(); it != lin.end(); it++)
 	{
-		printf("Type %s, Name %s\n", it->type.c_str(), it->name.c_str());
+		printf("Type %s, Name %s From size %d To size %d\n", it->type.c_str(), it->name.c_str(), it->from.size(), it->to.size());
 	}
 }
 
+void print_path(critical_pair pair){
 
+	list<vertex_op>::iterator curr_vertex = pair.op.pred.begin();
+	printf("Path %s\n", pair.op.name.c_str());
+	while(!curr_vertex->pred.empty())
+	{
+		printf("%s\n", curr_vertex->name.c_str());
+		curr_vertex = curr_vertex->pred.begin();
+//		vertex_op tmp_vertex = *curr_vertex.pred.begin();
+	}
+}
 
 
 
@@ -108,7 +119,7 @@ int main(int argc, char* argv[]){
 	while(infile.eof() == false)
 	{
 #ifdef DEBUG
-		printf("parse line\n");
+//		printf("parse line\n");
 #endif
 		getline(infile, line_in);
 		if (line_in.length() == 0)	continue;
@@ -119,7 +130,6 @@ int main(int argc, char* argv[]){
 //	    printf("signal list size %d\n", netlist_signals.size());
 //	    printf("op list size %d\n", netlist_op.size());
 		print_signals(netlist_signals);
-		print_op(netlist_op);
 
 
 
@@ -129,13 +139,30 @@ int main(int argc, char* argv[]){
 	printf("operator config\n");
 #endif
 	operator_config(netlist_signals, netlist_op);
+	print_op(netlist_op);
 
 #ifdef DEBUG
 	printf("write file\n");
 #endif
 	verilog_write(argv[1], outfile, netlist_signals, netlist_op);
 
+#ifdef DEBUG
+	printf("close file\n");
+#endif
+
 	infile.close();
 	outfile.close();
+
+#ifdef DEBUG
+	printf("Find critical path\n");
+#endif
+
+list<vertex_op> sorted_vertex;
+critical_pair pair;
+pair = critical_path(netlist_op, netlist_signals, sorted_vertex);
+printf("Critical path length %g\n", pair.max);
+print_path(pair);
+
+
 
 }

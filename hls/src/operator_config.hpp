@@ -10,7 +10,7 @@
 #include "data_structs.hpp"
 #include "sstream"
 
-void operator_config(signals_list signals_list, op_list op_list);
+void operator_config(signals_list& signals_list, op_list& op_list);
 
 
 

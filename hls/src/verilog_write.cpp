@@ -8,8 +8,11 @@
 
 
 #include "verilog_write.hpp"
+//#define DEBUG
 
-void width_extension(ofstream& outfile, signals from_first, list<op>::iterator it)
+
+
+void width_extension(ofstream& outfile, signals& from_first, list<op>::iterator it)
 {
 	if(from_first.width > it->width)
 				{
@@ -17,10 +20,10 @@ void width_extension(ofstream& outfile, signals from_first, list<op>::iterator i
 				}
 				if(from_first.width < it->width)
 				{
-					if(it->signs == unsign)
-						outfile << "{{" << from_first.width-it->width << "{" << from_first.name << "[" << from_first.width -1 << "]}}, " << from_first.name << "[" << from_first.width-1 << ":0]}";
-					if(it->signs == sign )
-						outfile << "{{" << from_first.width-it->width << "{" << 0 << "}}, " << from_first.name << "[" << from_first.width-1 << ":0]}";
+					if(it->signs == sign)
+						outfile << "{{" << -from_first.width+it->width << "{" << from_first.name << "[" << from_first.width -1 << "]}}, " << from_first.name << "[" << from_first.width-1 << ":0]}";
+					if(it->signs == unsign )
+						outfile << "{{" << -from_first.width+it->width << "{" << 0 << "}}, " << from_first.name << "[" << from_first.width-1 << ":0]}";
 				}
 				if(from_first.width == it->width)
 				{
@@ -32,13 +35,21 @@ void width_extension(ofstream& outfile, signals from_first, list<op>::iterator i
 
 
 
-void verilog_write(char * input_name, ofstream& outfile, signals_list signals_list, op_list op_list)
+void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_list, op_list& op_list)
 {
+#ifdef DEBUG
+	printf("Start writing!\n");
+#endif
 	outfile << "// Verilog generated from input netlist\n";
-	outfile << "// Netlist file name: " << input_name  << "\n";
-	outfile << "module" << input_name << "_v (\n";
+
+	outfile << "// Netlist file name: " << input_name << "\n";
+
+	string file_name(input_name);
+	size_t pos = file_name.find(".txt");
+	outfile << "module  " << file_name.substr(0,pos) << "_v (\n";
 	string signals_prev = "";
 	string signals_name = "";
+
 
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
@@ -64,6 +75,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			 }
 			 if(it->width != 1)
 			 {
+	//			 printf("signal width %d\n", it->width);
 				 outfile << "[" << (it->width-1) << ":0]";
 				 pos = outfile.tellp();
 			 }
@@ -75,6 +87,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			 outfile << it->name << ";\n";
 		}
 	}
+
     // write output
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
@@ -99,17 +112,14 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			 outfile << it->name << ";\n";
 		}
 	}
-    // write wire
+
+	// write wire
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
 		if(it->type == "wire")
 		{
 			int pos;
 			 outfile << "wire";
-			 if(it->signs == sign)
-			 {
-				outfile << " signed ";
-			 }
 			 if(it->width != 1)
 			 {
 				 outfile << "[" << (it->width-1) << ":0]";
@@ -130,10 +140,6 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 		{
 			int pos;
 			 outfile << "reg";
-			 if(it->signs == sign)
-			 {
-				outfile << " signed ";
-			 }
 			 if(it->width != 1)
 			 {
 				 outfile << "[" << (it->width-1) << ":0]";
@@ -147,14 +153,23 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			 outfile << it->name << ";\n";
 		}
 	}
+
+
+	outfile << endl << endl;
 	// write operators
+
 	for(list<op>::iterator it = op_list.begin(); it!=op_list.end(); it++)
 	{
+//		printf("Start writing op\n");
+//		printf("Curr op type %s name %s\n", it->type.c_str(), it->name.c_str());
 		bool signs = it->signs;
 		int width = it->width;
 		string name = it->name;
 		signals from_first = *(it->from.begin());
 		signals to_first = *(it->to.begin());
+#ifdef DEBUG
+		printf("Stamp1\n");
+#endif
 
 		if(it->type == "REG")
 		{
@@ -163,24 +178,14 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 
 		if(it->type == "ADD" || it->type == "SUB" || it->type == "MUL" || it->type == "DIV" || it->type == "MOD")
 		{
-			signals second = *(it->from.begin() ++);
+		//	std::advance(it, 1);
+		//	signals second = std::advance(it->from.begin(),1);
+			list<signals>::iterator ss = it->from.begin();
+			std::advance(ss, 1);
+			signals second = *(ss);
 			if (it->signs == sign)	outfile << "S";
 			outfile << it->type;
 			outfile <<" #(" << width << ") " << name << "(.a(";
-/*
-			if(from_first.width > it->width)
-			{
-				outfile << from_first.name << "[" << it->width -1 << ":0]";
-			}
-			if(from_first.width < it->width)
-			{
-				outfile << "{{" << from_first.width-it->width << "{" << from_first.name << "[" << from_first.width -1 << "]}}, " << from_first.name << "[" << from_first.width-1 << ":0]}";
-			}
-			if(from_first.width == it->width)
-			{
-				outfile << from_first.name;
-			}
-*/
 			width_extension(outfile, from_first, it);
 		    outfile << "), b(" ;
 		    width_extension(outfile, second, it);
@@ -191,11 +196,15 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 		    if(it->type == "DIV") 		outfile << "quot";
 		    if(it->type == "MOD") 	outfile << "rem";
 		    outfile << "(" << to_first.name <<"));" <<endl;
+		    continue;;
 		}
 
-		if(it->type.find("COMP"))
+		if(it->type == "COMP>" || it->type == "COMP<" || it->type == "COMP==")
 		{
-			signals second = *(it->from.begin()++);
+//			printf("COMP TYPE %s\n", it->type.c_str());
+			list<signals>::iterator ss = it->from.begin();
+			std::advance(ss, 1);
+			signals second = *(ss);
 			if(it->signs == sign) outfile << "S";
 			outfile << "COMP";
 			outfile << " #(" << width << ") " << name << "(.a(";
@@ -203,15 +212,20 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			outfile << "), b(" ;
 		    width_extension(outfile, second, it);
 		    outfile << "), .";
-		    if(it->type.find(">"))		outfile << "gt(" << to_first.name << "), .lt(), .eq());" << endl ;
-		    if(it->type.find("<"))		outfile << "gt(), .lt(" <<   to_first.name << "), .eq());" << endl ;
-		    if(it->type.find("=="))		outfile << "gt(), .lt(), .eq(" << to_first.name << "));" << endl ;
+		    if(it->type.find(">") != it->type.npos)		outfile << "gt(" << to_first.name << "), .lt(), .eq());" << endl ;
+		    if(it->type.find("<") != it->type.npos)		outfile << "gt(), .lt(" <<   to_first.name << "), .eq());" << endl ;
+		    if(it->type.find("==") != it->type.npos)		outfile << "gt(), .lt(), .eq(" << to_first.name << "));" << endl ;
+		    continue;
 		}
 
 		if(it->type == "MUX")
 		{
-			signals second = *(it->from.begin() ++);
-			signals third = *(it->from.begin() ++ ++);
+//			printf("MUX TYPE %s\n", it->type.c_str());
+			list<signals>::iterator ss = it->from.begin();
+			std::advance(ss, 1);
+			signals second = *(ss);
+			std::advance(ss,1);
+			signals third = *(ss);
 			outfile << "MUX2x1 ";
 			outfile << " #(" << width << ") " << name << "(.a(";
 			width_extension(outfile, second, it);
@@ -220,17 +234,20 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			outfile << "), sel(";
 			width_extension(outfile, from_first, it);
 			outfile << "), .d(" << to_first.name << "));" << endl;
-
+			continue;
 		}
 
 		if(it->type == "SHR" || it->type == "SHL")
 		{
-			signals second =*( it->from.begin() ++);
+			list<signals>::iterator ss = it->from.begin();
+			std::advance(ss, 1);
+			signals second = *(ss);
 			outfile << it->type << " #(" << width << ") " << name << "(.a(";
 			width_extension(outfile, from_first, it);
 			outfile << "), sh_amt(" ;
 			width_extension(outfile, second, it);
 			outfile << "), .d(" << to_first.name << "));" << endl;
+			continue;
 		}
 
 		if(it->type == "INC" || it->type == "DEC")
@@ -239,6 +256,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 			outfile << it->type << " #(" << width << ") " << name << "(.a(";
 			width_extension(outfile, from_first, it);
 			outfile <<  "), d(" << to_first.name << "));" << endl;
+			continue;
 		}
 	}
 	// write file end

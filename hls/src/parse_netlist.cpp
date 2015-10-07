@@ -91,7 +91,9 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 			if (curr_type == curr_token)
 				{
 					int 	pos = std::distance(size_type.begin(), it);
-					curr_info = size_info_array[pos];
+					curr_info.signs = size_info_array[pos].signs;
+					curr_info.width = size_info_array[pos].width;
+	//				printf("Curr statement %s sign %d width %d\n", in.c_str(), curr_info.signs, curr_info.width);
 					size_found = true;
 #ifdef 	DEBUG
 	printf("Find size token: ");
@@ -101,7 +103,10 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 					break;
 				}
 		}
-		if(size_found == true)	break;
+		if(size_found == true)
+			{
+				break;
+			}
 	}
 
 #ifdef 	DEBUG
@@ -235,6 +240,7 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 						{
 							reg_statement = false;
 							op_type_found = true;
+							curr_token_found = true;
 							op op_found =*( new op());
 							string op_count_name = "";		stringstream ss;
 							ss << op_count;		ss >> op_count_name ; 		op_count_name = op_count_name + "_";
@@ -251,6 +257,7 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 					{
 						reg_statement = false;
 						op_type_found = true;
+						curr_token_found = true;
 						op op_found =*( new op());
 						string op_count_name = "";		stringstream ss;
 						ss << op_count;		ss >> op_count_name ; 		op_count_name = op_count_name + "_";
@@ -266,10 +273,10 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 				if(curr_token_found == true)	continue;
 			}
 			valid_statement = false;
+///			printf("Curr token %s\n", it2->c_str());
 			reg_statement = false;
 
 		}
-//		printf("Curr String %s  reg status %d\n", in.c_str(), reg_statement);
 		// After processing RHS, deal with registers
 		if(reg_statement == true)
 		{
@@ -283,15 +290,34 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 		}
 
 		// Process the from and to relations between signalss and operators
+//		printf("Curr statement %s valid %d\n", in.c_str(), valid_statement);
 		if(valid_statement == true)
 		{
-			op_list.back().to.push_back(curr_signals_to);
-			curr_signals_to.from.push_back(op_list.back());
+
+//			op_list.back().to.push_back(curr_signals_to);
+//			curr_signals_to.from.push_back(op_list.back());
+			for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it ++)
+			{
+				if(it->name == curr_signals_to.name)
+				{
+					it->from.push_back(op_list.back());
+					op_list.back().to.push_back(*it);
+				}
+			}
+
 
 			for(list<signals>::iterator it = curr_signals_from_list.begin(); it != curr_signals_from_list.end(); it++)
 			{
-				op_list.back().from.push_back(*it);
-				it->to.push_back(op_list.back());
+//				op_list.back().from.push_back(*it);
+//				it->to.push_back(op_list.back());
+				for(list<signals>::iterator it2 = signals_list.begin(); it2 != signals_list.end(); it2 ++)
+				{
+					if(it->name == it2->name)
+					{
+						it2->to.push_back(op_list.back());
+						op_list.back().from.push_back(*it2);
+					}
+				}
 			}
 		}
 	}
