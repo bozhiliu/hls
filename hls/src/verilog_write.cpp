@@ -42,7 +42,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
 
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "INPUT" || it-> type == "OUTPUT")
+		if(it->type == "input" || it-> type == "output")
 		{
 			string signals_name = it->name;
 			if(signals_prev != "")
@@ -54,7 +54,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
      // write input
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "INPUT")
+		if(it->type == "input")
 		{
 			int pos;
 			 outfile << "input";
@@ -78,7 +78,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
     // write output
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "OUTPUT")
+		if(it->type == "output")
 		{
 			int pos;
 			 outfile << "output";
@@ -102,7 +102,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
     // write wire
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "WIRE")
+		if(it->type == "wire")
 		{
 			int pos;
 			 outfile << "wire";
@@ -126,7 +126,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list signals_li
    // write reg
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "REG")
+		if(it->type == "reg")
 		{
 			int pos;
 			 outfile << "reg";

@@ -11,16 +11,21 @@
 #include "data_structs.hpp"
 #include "vector"
 #include "stdlib.h"
+#include "string"
 
 std::string op_type_array[] ={ "ADD","SUB","MUL","COMP","MUX","SHR","SHL","DIV","MOD","INC","DEC","REG"} ;
-std::string op_token_array[] = {"+",  "-", "*", ">", "<", "==", "?", "<<", ">>", "/", "%", "1"};
+//std::string op_token_array[] = {"+",  "-", "*", ">", "<", "==", "?", "<<", ">>", "/", "%", "1"};
+std::string op_token_array[] = { "+", "-", "*", ">", "?", "<<", ">>", "/", "%", "<", "==", "1" };
+
+
+
 
 std::string signals_type_array[] = {
-	"INPUT", "OUTPUT", "WIRE", "REG"
+	"input", "output", "wire", "reg"
 };
 
 std::string size_type_array[12] = {
-	"Int1", "Int2", "Int8", "Int16"", Int32", "Int64",
+	"Int1", "Int2", "Int8", "Int16", "Int32", "Int64",
 	"UInt1", "UInt2", "UInt8", "UInt16", "UInt32", "UInt64"
 };
 

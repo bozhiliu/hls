@@ -15,11 +15,11 @@
 
 using namespace std;
 
-int parse_netlist(std::string in, op_list op_list, signals_list signals_list);
+int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list);
 
 std::vector<std::string> find_size(std::string);
 
-vector<std::string> tokenize(std::string in, std::vector<std::string> delimiters, std::vector<std::string> tokens);
+vector<std::string> tokenize(std::string in, std::vector<std::string> delimiters, std::vector<std::string>& tokens);
 
 
 #endif /* PARSE_NETLIST_HPP_ */

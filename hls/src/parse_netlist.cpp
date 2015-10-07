@@ -6,39 +6,59 @@
  */
 
 #include "parse_netlist.hpp"
+//#define DEBUG
+#define SWITCH
+#include "stdio.h"
 
-
-
-void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::string> tokens)
+void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::string>& tokens)
 {
 	string buffer = "";
-	for(int count=0; count < in.length(); count++)
+//	printf("Curr string\n%s\n", in.c_str());
+	for(unsigned int count=0; count < in.length(); count++)
 	{
 		bool find = false;
+//		printf("char %c\n", in[count]);
 		for(std::vector<char>::iterator it = delimiters.begin(); it != delimiters.end(); it++)
 		{
 			if(in[count] == *it)
 			{
 				if(buffer.length() != 0)
+				{
 					tokens.push_back(buffer);
+//					printf("Tokens %s\n", buffer.c_str());
+				}
 				buffer = "";
 				find = true;
 				continue;
 			}
 		}
-		if(find == true) continue;
+		if(find == true)
+			{
+				continue;
+			}
 		buffer = buffer + in[count];
-		continue;
+	}
+//	printf("Leave sentence %s\n", buffer.c_str());
+	if(buffer.length()!=0)
+	{
+		tokens.push_back(buffer);
+//		printf("Tokens %s\n", buffer.c_str());
 	}
 }
 
 
-int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
+int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 {
-	vector<string> tokens;
+	vector<string> tokens ;
+#ifdef 	DEBUG
+	printf("Function start\n");
+#endif
 	tokenize(in, delimiters, tokens);
-
-	int op_count = 0;
+#ifdef 	DEBUG
+	printf("Get tokens\n");
+	printf("Token vector size: %d\n", tokens.size());
+#endif
+	int op_count = op_list.size();
 	bool signs;
 	int width;
 	size_info curr_info (unsign, -1);
@@ -47,9 +67,23 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 	bool signals_type_found = false;
 	bool op_type_found = false;
 
+#ifdef 	DEBUG
+	printf("Parse initialize\n");
+#endif
+
+
 	// Find size tokens of current statement
+#ifdef 	DEBUG
+		printf("Finding size token\n");
+#endif
+
+
 	for(vector<string>::iterator it2 = tokens.begin(); it2 != tokens.end(); it2++)
 	{
+
+#ifdef 	DEBUG
+		printf("Current token %s \n", it2->c_str());
+#endif
 		for(vector<string>::iterator it = size_type.begin(); it !=size_type.end(); it++)
 		{
 			string curr_type = *it;
@@ -59,18 +93,35 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 					int 	pos = std::distance(size_type.begin(), it);
 					curr_info = size_info_array[pos];
 					size_found = true;
+#ifdef 	DEBUG
+	printf("Find size token: ");
+	printf("%s\n" , it2->c_str());
+#endif
+					tokens.erase(it2);
 					break;
 				}
 		}
 		if(size_found == true)	break;
 	}
 
+#ifdef 	DEBUG
+	printf("Stamp Point1 \n");
+#endif
+
+
 	// Find type tokens of current statement
 	for(vector<string>::iterator it2 = tokens.begin(); it2 != tokens.end(); it2++)
 	{
+#ifdef 	DEBUG
+	printf("Finding type token: curr %s\n", it2->c_str());
+#endif
+
 		// When signals type determined, consider the rest tokens as signalss
 		if(signals_type_found == true)
 			{
+#ifdef 	DEBUG
+		printf("Find signal token %s \n", it2->c_str());
+#endif
 				string curr_token = *it2;
 				signals  s  = *(new signals());
 				s.signs = curr_info.signs;
@@ -83,10 +134,18 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 		// Find the signals type
 		for(vector<string>::iterator it = signals_type.begin(); it !=signals_type.end(); it++)
 			{
+
 				string curr_type = *it;
 				string curr_token = *it2;
+#ifdef 	DEBUG
+		printf("Compare with signal type array %s  %s \n", it2->c_str(), it->c_str());
+#endif
 				if (curr_type == curr_token)
 					{
+#ifdef 	DEBUG
+	printf("Find type token: %s\n", it->c_str());
+#endif
+
 						signals_type_found = true;
 						if(size_found == false)
 						{
@@ -99,6 +158,11 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 					}
 			}
 	}
+
+
+#ifdef 	DEBUG
+	printf("Stamp Point2 \n");
+#endif
 
 	// Find operator tokens of current statement
 	if(tokens[1] == "=")
@@ -119,13 +183,15 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 				continue;
 			}
 		}
-
+#ifdef 	DEBUG
+	printf("Stamp Point3 \n");
+#endif
 		// RHS: find the source signalss and operator
 		for(vector<string>::iterator it2 = tokens.begin()+2; it2 != tokens.end(); it2++)
 		{
 			bool curr_token_found = false;
-
-			// find signalss for potential operator
+//			printf("Curr str3 %s  token %s  reg %d\n", in.c_str(), it2->c_str(), reg_statement);
+			// find signals for potential operator
 			if(curr_token_found == false)
 			{
 				for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
@@ -134,12 +200,13 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 					signals curr_signals = *it;
 					if (curr_token == curr_signals.name)
 					{
-						reg_statement = reg_statement && 1;
+						reg_statement = reg_statement & 1;
 						curr_signals_from_list.push_back(*it);
 						curr_token_found = true;
-						continue;
+						break;
 					}
 				}
+				if(curr_token_found == true)	continue;
 			}
 			// find operator
 			if(curr_token_found == false)
@@ -148,6 +215,8 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 				if (*it2 == "1")
 				{
 					constant_one = true;
+					reg_statement = false;
+					curr_token_found = true;
 					op_list.back().name = op_list.back().name+"1";
 					if(op_list.back().type == "ADD")	op_list.back().type = "INC";	continue;
 					if(op_list.back().type == "SUB")		op_list.back().type = "INC";	continue;
@@ -157,6 +226,27 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 					string curr_token = *it2;
 					string curr_op = *it;
 					int 	pos = std::distance(op_type.begin(), it);
+
+
+					// special case handling for comp
+					if(curr_op == "COMP")
+					{
+						if(curr_token == ">" || curr_token == "<" || curr_token == "==")
+						{
+							reg_statement = false;
+							op_type_found = true;
+							op op_found =*( new op());
+							string op_count_name = "";		stringstream ss;
+							ss << op_count;		ss >> op_count_name ; 		op_count_name = op_count_name + "_";
+							op_found.name = op_count_name+curr_op;
+							op_count = 1+op_count;
+							op_found.type = *it;
+							op_found.type = op_found.type + curr_token;
+							op_list.push_back(op_found);
+							break;
+						}
+					}
+
 					if(curr_token == op_token_array[pos])
 					{
 						reg_statement = false;
@@ -164,19 +254,22 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 						op op_found =*( new op());
 						string op_count_name = "";		stringstream ss;
 						ss << op_count;		ss >> op_count_name ; 		op_count_name = op_count_name + "_";
+
 						op_found.name = op_count_name+curr_op;
-						op_count ++;
+						op_count = 1+op_count;
 						op_found.type = *it;
 						if(curr_op  == "COMP")		op_found.type = op_found.type + curr_token;
 						op_list.push_back(op_found);
-						continue;
+						break;
 					}
 				}
+				if(curr_token_found == true)	continue;
 			}
 			valid_statement = false;
 			reg_statement = false;
-		}
 
+		}
+//		printf("Curr String %s  reg status %d\n", in.c_str(), reg_statement);
 		// After processing RHS, deal with registers
 		if(reg_statement == true)
 		{
@@ -204,11 +297,15 @@ int parse_netlist(std::string in, op_list op_list, signals_list signals_list)
 	}
 
 
+
 	curr_info.signs = unsign;
 	curr_info.width = -1;
 	curr_signals_type = "";
 	size_found = false;
 	signals_type_found = false;
 	op_type_found = false;
+ //   printf("signal list size %d\n", signals_list.size());
+ //   printf("op list size %d\n", op_list.size());
+
 	return 0;
 }
