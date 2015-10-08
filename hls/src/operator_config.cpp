@@ -21,8 +21,9 @@ void operator_config(signals_list& signals_list, op_list& op_list)
 		{
 			for(list<signals>::iterator it2 = it->to.begin(); it2 != it->to.end(); it2++)
 			{
-				if (it2->type == "REG")
+				if (it2->type == "register")
 				{
+		//			printf("Happens!\n");
 					stringstream ss;
 					ss << reg_add;
 					string count;
@@ -59,42 +60,53 @@ void operator_config(signals_list& signals_list, op_list& op_list)
 
     for(list<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
     {
-    	if (it->type == "OUTPUT")
+//    	printf("Curr signal %s type %s\n", it->name.c_str(), it->type.c_str());
+    	if (it->type == "output")
     	{
-    		for(list<op>::iterator it2 = it->from.begin();  it2 != it->from.begin(); it2++)
+//    		printf("Check %d %s\n", it->from.size(), it->from.begin()->type.c_str());
+    		for(list<op>::iterator it2 = it->from.begin();  it2 != it->from.end(); it2++)
     		{
-    			if (it->type != "REG")
+    			for(list<op>::iterator it3 = op_list.begin();  it3 != op_list.end();  it3++)
     			{
-    				stringstream ss;
-    				ss << reg_add;
-    				string count;
-    				ss >> count;
-    				signals s =*( new signals());
-    				op o =*( new op());
+    				if (it2->name == it3->name)
+    				{
+    					if (it3->type != "REG")
+    					{
+    						stringstream ss;
+    						ss << reg_add;
+    						string count;
+    						ss >> count;
+    						signals s =*( new signals());
+    						op o =*( new op());
+//    						printf("S1\n");
+    					    s.name = count + "_tmp_signals";
+    					    s.type = "wire";
+    					    s.signs = it->signs;
+    					    s.width = it->width;
+    					    s.to.push_back(o);
+    					    s.from.push_back(*it3);
+    					    signals_list.push_back(s);
+//    					    printf("S2\n");
+    					    o.name = count + "_tmp_reg";
+    					    o.width =0;
+    					    o.signs = unsign;
+    					    o.from.push_back(s);
+    					    o.to.push_back(*it);
+    					    o.type = "REG";
+    					    op_list.push_back(o);
+//    					    printf("S3\n");
 
-    				s.name = count + "_tmp_signals";
-    				s.type = "WIRE";
-    				s.signs = it->signs;
-    				s.width = it->width;
-    				s.to.push_back(o);
-    				s.from.push_back(*it2);
-    				signals_list.push_back(s);
-
-    				o.name = count + "_tmp_reg";
-    				o.width =0;
-    				o.signs = unsign;
-    				o.from.push_back(s);
-    				o.to.push_back(*it);
-    				o.type = "REG";
-    				op_list.push_back(o);
-
-    				it2->to.erase(it);
-    				it->from.erase(it2);
-    				it2->to.push_back(s);
-    				it->from.push_back(o);
-
-    				reg_add +=1;
+    					    it3->to.push_front(s);
+    		//			    it->from.push_back(o);
+    		//			    it3->to.erase(it);
+    		//			    it->from.erase(it3); //
+    					    reg_add +=1;
+//    					    printf("S4\n");
+    					   }
+    				break;
+    				}
     			}
+
     		}
     	}
     }
@@ -130,7 +142,6 @@ void operator_config(signals_list& signals_list, op_list& op_list)
 //			printf("curr op %s output signal width %d\n",curr_op.name.c_str(), it2->width);
 			if(curr_op.type.find("COMP") ==curr_op.type.npos)
 			{
-
 				if(curr_signals.width > width)		width = curr_signals.width;
 			}
 		}

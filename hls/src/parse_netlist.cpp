@@ -13,13 +13,21 @@
 void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::string>& tokens)
 {
 	string buffer = "";
-//	printf("Curr string\n%s\n", in.c_str());
+	bool comment = false;
+//	printf("Curr string %d\n##%s##\n", in.length(), in.c_str());
 	for(unsigned int count=0; count < in.length(); count++)
 	{
 		bool find = false;
-//		printf("char %c\n", in[count]);
+//		printf("char %c ,%d\n",in[count], in[count]);
+		if(in[count] =='/' && in[count+1] == '/')
+		{
+			comment = true;
+			break;
+		}
+
 		for(std::vector<char>::iterator it = delimiters.begin(); it != delimiters.end(); it++)
 		{
+//			printf("curr char  %d  delimiter %d\n", in[count], *it);
 			if(in[count] == *it)
 			{
 				if(buffer.length() != 0)
@@ -37,6 +45,7 @@ void tokenize(std::string in, std::vector<char> delimiters, std::vector<std::str
 				continue;
 			}
 		buffer = buffer + in[count];
+
 	}
 //	printf("Leave sentence %s\n", buffer.c_str());
 	if(buffer.length()!=0)
@@ -155,6 +164,7 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 						if(size_found == false)
 						{
 							signals_type_found = false;
+							printf("Return pos 0\n");
 							return 1;
 						}
 						int pos = std::distance(signals_type.begin(), it);
@@ -172,10 +182,11 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 	// Find operator tokens of current statement
 	if(tokens[1] == "=")
 	{
+		string message ;
 		list<signals> curr_signals_from_list;
 		signals curr_signals_to;
 		bool reg_statement = true;
-		bool valid_statement = false;
+		bool valid_statement = true;
 		bool constant_one = false;
 		// LHS of equation: find the sink signals
 		for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
@@ -185,6 +196,13 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 			{
 				valid_statement = true;
 				curr_signals_to = curr_signals;
+				break;
+			}
+			else
+			{
+				valid_statement = false;
+				message = "Unrecongnized Left hand side of equation\n";
+//				printf("Curr token %s\n", tokens[0].c_str());
 				continue;
 			}
 		}
@@ -208,6 +226,7 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 						reg_statement = reg_statement & 1;
 						curr_signals_from_list.push_back(*it);
 						curr_token_found = true;
+
 						break;
 					}
 				}
@@ -223,8 +242,11 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 					reg_statement = false;
 					curr_token_found = true;
 					op_list.back().name = op_list.back().name+"1";
-					if(op_list.back().type == "ADD")	op_list.back().type = "INC";	continue;
-					if(op_list.back().type == "SUB")		op_list.back().type = "INC";	continue;
+//					printf("Curr str inc/dec %s type %s\n", in.c_str(), op_list.back().type.c_str());
+					if(op_list.back().type == "ADD")	op_list.back().type = "INC";
+					if(op_list.back().type == "SUB")		op_list.back().type = "DEC";
+					continue;
+//					printf("Curr str inc/dec %s type %s\n", in.c_str(), op_list.back().type.c_str());
 				}
 				for(vector<string>::iterator it = op_type.begin(); it != op_type.end(); it++)
 				{
@@ -273,13 +295,15 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 				if(curr_token_found == true)	continue;
 			}
 			valid_statement = false;
-///			printf("Curr token %s\n", it2->c_str());
+			message = "Unrecongnized right hand side token\n";
+//            printf("Curr token2 %s\n", it2->c_str());
 			reg_statement = false;
 
 		}
 		// After processing RHS, deal with registers
 		if(reg_statement == true)
 		{
+//	 		printf("##########\nCurr str %s\n############\n", in.c_str());
 			op op_found = *(new op());
 			string op_count_name = "";		stringstream ss;
 			ss << op_count;		ss>> op_count_name ; 		op_count_name = op_count_name + "_";
@@ -319,6 +343,13 @@ int parse_netlist(std::string in, op_list& op_list, signals_list& signals_list)
 					}
 				}
 			}
+		}
+		else
+		{
+//			printf("Return pos 1\n");
+			printf("%s", message.c_str());
+			return 1;
+
 		}
 	}
 

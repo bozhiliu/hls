@@ -68,7 +68,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_l
 		if(it->type == "input")
 		{
 			int pos;
-			 outfile << "input";
+			 outfile << "input ";
 			 if(it->signs == sign)
 			 {
 				outfile << " signed ";
@@ -94,7 +94,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_l
 		if(it->type == "output")
 		{
 			int pos;
-			 outfile << "output";
+			 outfile << "output ";
 			 if(it->signs == sign)
 			 {
 				outfile << " signed ";
@@ -119,7 +119,7 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_l
 		if(it->type == "wire")
 		{
 			int pos;
-			 outfile << "wire";
+			 outfile << "wire ";
 			 if(it->width != 1)
 			 {
 				 outfile << "[" << (it->width-1) << ":0]";
@@ -133,13 +133,25 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_l
 			 outfile << it->name << ";\n";
 		}
 	}
+	for(list<op>::iterator it = op_list.begin(); it != op_list.end(); it++)
+	{
+		if(it->type == "COMP>" || it->type == "COMP<" || it->type == "COMP==")
+		{
+			outfile << "wire " << "[" << it->width-1 << ":0] " << it->name << "_placeholder1;\n";
+			outfile << "wire " << "[" << it->width-1 << ":0] " << it->name << "_placeholder2;\n";
+		}
+	}
+
+
+
+
    // write reg
 	for(list<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
 	{
-		if(it->type == "reg")
+		if(it->type == "register")
 		{
 			int pos;
-			 outfile << "reg";
+			 outfile << "reg ";
 			 if(it->width != 1)
 			 {
 				 outfile << "[" << (it->width-1) << ":0]";
@@ -212,9 +224,9 @@ void verilog_write(char * input_name, ofstream& outfile, signals_list& signals_l
 			outfile << "), b(" ;
 		    width_extension(outfile, second, it);
 		    outfile << "), .";
-		    if(it->type.find(">") != it->type.npos)		outfile << "gt(" << to_first.name << "), .lt(), .eq());" << endl ;
-		    if(it->type.find("<") != it->type.npos)		outfile << "gt(), .lt(" <<   to_first.name << "), .eq());" << endl ;
-		    if(it->type.find("==") != it->type.npos)		outfile << "gt(), .lt(), .eq(" << to_first.name << "));" << endl ;
+		    if(it->type.find(">") != it->type.npos)		outfile << "gt(" << to_first.name << "), .lt(" << it->name << "_placeholder1), .eq(" << it->name << "_placeholder2));" << endl ;
+		    if(it->type.find("<") != it->type.npos)		outfile << "gt(" << it->name << "_placeholder1), .lt(" <<   to_first.name << "), .eq(" << it->name << "_placeholder2));" << endl ;
+		    if(it->type.find("==") != it->type.npos)		outfile << "gt(" << it->name << "_placeholder1), .lt(" << it->name << "_placeholder2), .eq(" << to_first.name << "));" << endl ;
 		    continue;
 		}
 

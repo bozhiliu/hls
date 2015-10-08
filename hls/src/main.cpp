@@ -15,7 +15,9 @@
 #include "stdio.h"
 #include "fstream"
 #include "vector"
-#define DEBUG
+//#define DEBUG
+//#define SWITCH
+
 
 using namespace std;
 
@@ -34,17 +36,21 @@ void print_signals(list<signals> lin){
 	}
 }
 
-void print_path(critical_pair pair){
+void print_path(ofstream& outfile, critical_pair pair){
 
 	list<vertex_op>::iterator curr_vertex = pair.op.pred.begin();
-	printf("Path %s\n", pair.op.name.c_str());
+//	printf("Path %s\n", pair.op.name.c_str());
+	outfile << endl << "// Critical Path :" << pair.max << " ns\n";
+	outfile << endl << "//Critical Path " << pair.op.name ;
 	while(!curr_vertex->pred.empty())
 	{
-		printf("%s\n", curr_vertex->name.c_str());
+//		printf("%s\n", curr_vertex->name.c_str());
+		outfile << "  " << curr_vertex->name;
 		curr_vertex = curr_vertex->pred.begin();
 //		vertex_op tmp_vertex = *curr_vertex.pred.begin();
 	}
-	printf("%s\n", curr_vertex->name.c_str());
+//	printf("%s\n", curr_vertex->name.c_str());
+	outfile << "  " << curr_vertex->name << endl;
 }
 
 
@@ -107,9 +113,9 @@ int main(int argc, char* argv[]){
 	signals_type.push_back(signals_type_array[2]);	signals_type.push_back(signals_type_array[3]);
 
 //	copy(delimiters_array, delimiters_array+4, delimiters.begin());
-	delimiters.push_back(delimiters_array[0]); delimiters.push_back(delimiters_array[1]);
+	delimiters.push_back(delimiters_array[0]);   delimiters.push_back(delimiters_array[1]);
 	delimiters.push_back(delimiters_array[2]); 	delimiters.push_back(delimiters_array[3]);
-
+	delimiters.push_back(delimiters_array[4]);   delimiters.push_back(delimiters_array[5]);
 
 
 #ifdef DEBUG
@@ -123,24 +129,35 @@ int main(int argc, char* argv[]){
 //		printf("parse line\n");
 #endif
 		getline(infile, line_in);
-		if (line_in.length() == 0)	continue;
-		parse_netlist(line_in, netlist_op, netlist_signals);
+		if (line_in.length() == 0 || line_in.length() == 1)	continue;
+		int status;
+		status = parse_netlist(line_in, netlist_op, netlist_signals);
+		if (status == 1)
+		{
+			printf("Parse anomalies! Current statement is %s\n", line_in.c_str());
+			printf("Program exits\n");
+			return 1;
+		}
 	}
 
 
 //	    printf("signal list size %d\n", netlist_signals.size());
 //	    printf("op list size %d\n", netlist_op.size());
-		print_signals(netlist_signals);
+#ifdef SWITCH
+	print_signals(netlist_signals);
+#endif
 
 
-
+//	print_op(netlist_op);
 
 
 #ifdef DEBUG
 	printf("operator config\n");
 #endif
 	operator_config(netlist_signals, netlist_op);
-	print_op(netlist_op);
+#ifdef SWITCH
+//	print_op(netlist_op);
+#endif
 
 #ifdef DEBUG
 	printf("write file\n");
@@ -151,8 +168,7 @@ int main(int argc, char* argv[]){
 	printf("close file\n");
 #endif
 
-	infile.close();
-	outfile.close();
+
 
 #ifdef DEBUG
 	printf("Find critical path\n");
@@ -161,9 +177,10 @@ int main(int argc, char* argv[]){
 list<vertex_op> sorted_vertex;
 critical_pair pair;
 pair = critical_path(netlist_op, netlist_signals, sorted_vertex);
-printf("Critical path length %g\n", pair.max);
-print_path(pair);
+//printf("Critical path length %g\n", pair.max);
+print_path(outfile, pair);
 
-
+infile.close();
+outfile.close();
 
 }

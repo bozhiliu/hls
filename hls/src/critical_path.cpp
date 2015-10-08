@@ -163,7 +163,7 @@ critical_pair critical_path(op_list & op_list, signals_list & signals_list, list
 		if (it->from.empty() == true)
 			{
 				it->dist = it->delay;
-				printf("Set Starting Node delay value %s  %f\n", it->name.c_str(), it->dist);
+//				printf("Set Starting Node delay value %s  %f\n", it->name.c_str(), it->dist);
 			}
 		for(list<vertex_op>::iterator it2 = it->to_op.begin(); it2 != it->to_op.end(); it2++ )
 		{
@@ -172,11 +172,11 @@ critical_pair critical_path(op_list & op_list, signals_list & signals_list, list
 				if (it3->name == it2->name)
 				{
 
-					printf("Curr node1 %s node2 %s\n", it->name.c_str(), it3->name.c_str());
+//					printf("Curr node1 %s node2 %s\n", it->name.c_str(), it3->name.c_str());
 					if(it->type == "REG")
 					{
 						it3->dist = it3->delay;
-						printf("Curr dist1 %g  dist2 %g\n\n", it->dist, it3->dist);
+//						printf("Curr dist1 %g  dist2 %g\n\n", it->dist, it3->dist);
 						continue;
 					}
 
@@ -185,9 +185,11 @@ critical_pair critical_path(op_list & op_list, signals_list & signals_list, list
 						it3->dist = it->dist + it3->delay;
 						it3->pred.clear();
 						it3->pred.push_back(*it);
-						printf("Curr dist1 %g  dist2 %g Pred %s\n\n", it->dist, it3->dist, it3->pred.begin()->name.c_str());
+//						printf("Curr dist1 %g  dist2 %g Pred %s\n\n", it->dist, it3->dist, it3->pred.begin()->name.c_str());
 						continue;
 					}
+
+
 				}
 			}
 		}

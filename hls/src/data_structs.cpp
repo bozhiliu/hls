@@ -21,7 +21,7 @@ std::string op_token_array[] = { "+", "-", "*", ">", "?", "<<", ">>", "/", "%", 
 
 
 std::string signals_type_array[] = {
-	"input", "output", "wire", "reg"
+	"input", "output", "wire", "register"
 };
 
 std::string size_type_array[12] = {
@@ -34,7 +34,9 @@ char delimiters_array[] = {
 		','  ,
 		' '  ,
 		';' ,
-		':'
+		':' ,
+		'\t',
+		'\n'
 };
 
 size_info int1_info(sign, 1);		size_info int2_info (sign, 2);
