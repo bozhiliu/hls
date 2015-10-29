@@ -44,11 +44,11 @@ operation::operation(string _name, operation_type _otype)
 }
 
 
-void operation::add_to_signal(signals to){
+void operation::add_to_signal(signals& to){
     to_list.push_back(to);
 }
 
-void operation::add_from_signal(signals from){
+void operation::add_from_signal(signals& from){
     from_list.push_back(from);
 }
 
@@ -58,6 +58,14 @@ void operation::set_size(unsigned int _size){
 
 void operation::set_sign(sign_type s){
     sign = s;
+}
+
+void operation::set_type(operation_type _type){
+    this->type = _type;
+}
+
+unsigned int operation::get_size(){
+    return size;
 }
 
 signals::signals(string _name, signal_type _type, unsigned int _size, sign_type _sign){
@@ -71,11 +79,11 @@ string signals::get_name(){
     return this->name;
 }
 
-void signals::add_from_op(operation op){
+void signals::add_from_op(operation& op){
     from_list.push_back(op);
 }
 
-void signals::add_to_op(operation op){
+void signals::add_to_op(operation& op){
     to_list.push_back(op);
 }
 
@@ -87,6 +95,18 @@ sign_type signals::get_sign(){
     return sign;
 }
 
-void branch_block::add_bb_list(operation op){
-    bb_list.push_back(op);
+
+branch_block::branch_block(string _name, branch_type _type){
+    name = _name;
+    type = _type;
+}
+
+
+
+void branch_block::add_bb_list(pair<operation, bool>& p_in){
+    bb_list.push_back(p_in);
+}
+
+void branch_block::add_from_list(operation& sin){
+    from_list.push_back(sin);
 }

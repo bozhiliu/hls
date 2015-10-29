@@ -7,6 +7,6 @@
 using namespace std;
 
 
-void branch_parse(string sin, vector<branch_block> branch_list);
 vector<string> tokenize(string sin);
-void parse_line(fstream fin, vector<signals> signals_list, vector<operation> operation_list);
+void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list);
+void parse_line(fstream fin, vector<signals>& signals_list, vector<operation>& operation_list, vector<branch_block>& branch_list);

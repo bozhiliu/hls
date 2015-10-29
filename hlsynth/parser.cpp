@@ -26,11 +26,149 @@ vector<string> tokenize(string sin){
 }
 
 
+string int2string(int op_count){
+    char count[10];
+    sprintf(count, "%d", op_count);
+    op_count ++;
+    return string(count);
+}
 
-void parse_line(fstream fin, vector<signals> signals_list, vector<operation> operation_list){
+
+void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list){
+    
+    // handle normal equations a = b X c
+    if(tokens[1] == "="){
+        tokens.erase(tokens.begin()+1);
+        int op_found = 0;
+        // Found operator
+        for(map<operation_type, string>::iterator it = otype_map.begin(); it != otype_map.end(); it++)
+        {
+            for(vector<string>::iterator it2 = tokens.begin(); it2!= tokens.end(); it2++)
+            {
+                string tmp = *it2 + *(it2+1);
+                if(tmp == it->second)   
+                {
+                    op_found = 2;
+                    string  name = it->second + "_" +int2string(op_count);
+                    operation o_new(name, it->first);
+                    o_new.set_sign(unsigns);
+                    operation_list.push_back(o_new);
+                    tokens.erase(it2);
+                    tokens.erase(it2+1);
+                    break;
+                }
+                if(*it2 == it->second)
+                {
+                    op_found = 1;
+                    string  name = it->second + "_" +int2string(op_count);
+                    operation o_new(name, it->first);
+                    o_new.set_sign(unsigns);
+                    operation_list.push_back(o_new);
+                    tokens.erase(it2);
+                    break;
+                }
+            }
+            if (op_found != 0)   break;
+        }
+                
+        // Found to signal
+        for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
+        {
+            if(tokens[0] == it->get_name())
+            {
+                it->add_from_op(operation_list.back());
+                operation_list.back().add_to_signal(*it);
+                operation_list.back().set_size(it->get_size());
+                tokens.erase(tokens.begin());
+                break;
+            }
+        }
+        // Found from signals
+        for(vector<string>::iterator it1 = tokens.begin(); it1 != tokens.end(); it1++)
+        {
+            for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
+            {
+                if(*it1 == it->get_name())
+                {
+                    it->add_to_op(operation_list.back());
+                    operation_list.back().add_from_signal(*it);
+                    if(it->get_sign() == signs)  operation_list.back().set_sign(signs);
+                    tokens.erase(it1);
+                    continue;
+                }
+            }
+        }        
+    return;
+    }
+
+    // Handle comparison statements like a<b
+    if(tokens[1] == "==" || tokens[1] =="<" || tokens[1] == ">"){
+        // Create internal signal for the output of evaluation
+        string signal_name = "condition_out_" + int2string(op_count);
+        signals s_new(signal_name, variable, 1, unsigns);
+        string op_name = tokens[1] + "_" + int2string(op_count);
+        operation_type op_type;
+        if(tokens[1] == "==")   op_type = equals;
+        if(tokens[1] == "<")    op_type = smaller;
+        if(tokens[1] == ">")    op_type = bigger;
+        operation o_new(op_name, op_type);
+        o_new.set_sign(unsigns);
+        o_new.set_size(0);
+        // handle first input signal
+        for(vector<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
+        {
+            if(it->get_name() == tokens[0]) { 
+                o_new.add_from_signal(*it); 
+                o_new.set_size(max(o_new.get_size(), it->get_size()));
+                if (it->get_sign() == signs)    o_new.set_sign(signs);
+                break;  }
+        }
+        // handle the second one
+        for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
+        {
+            if(it->get_name() == tokens[2]) { 
+                o_new.add_from_signal(*it); 
+                o_new.set_size(max(o_new.get_size(), it->get_size()));
+                if (it->get_sign() == signs)    o_new.set_sign(signs);
+                break;}
+        }
+        o_new.add_to_signal(s_new);
+        operation_list.push_back(o_new);
+        s_new.add_from_op(o_new);
+        signals_list.push_back(s_new);
+        return;
+    }
+
+    // Handle only single variable presented
+    if(tokens.size() == 1){
+        string signal_name = "condition_out_" + int2string(op_count);
+        signals s_new(signal_name, variable, 1, unsigns);
+        string op_name = "eval_"+int2string(op_count);
+        operation o_new(op_name, equals);
+        o_new.set_sign(unsigns);
+        o_new.set_size(0);
+        for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
+        {
+            if(it->get_name() == tokens[0]){
+                o_new.add_from_signal(*it);
+                o_new.set_size(max(o_new.get_size(), it->get_size()));
+                if (it->get_sign() == signs)    o_new.set_sign(signs);
+                break;  }
+        }
+        o_new.add_to_signal(s_new);
+        operation_list.push_back(o_new);
+        s_new.add_from_op(o_new);
+        signals_list.push_back(s_new);
+        return;
+    }
+
+}
+
+void parse_line(fstream fin, vector<signals>& signals_list, vector<operation>& operation_list, vector<branch_block>& branch_list){
     string line;
     vector<string> tokens;
-    
+    int branch_level = -1;
+    bool branch_direction = true;
     while(!fin.eof())
     {
         tokens.clear();
@@ -41,13 +179,54 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
         bool type_found = false;
         bool size_found = false;
         int op_found = 0;
-        bool equation_found = false;
         int op_count = 0;
         signal_type curr_stype;
         sign_type curr_sign;
-        operation_type curr_otype;
         unsigned int curr_width;
-        
+    
+        // Handle if statements
+        if(tokens[0] == "if")
+        {
+            string name = "condition_" + int2string(op_count);
+            branch_type type = condition;
+            branch_block b_new(name, type);
+            
+            tokens.erase(tokens.begin());
+            if(tokens.back() == "{")    tokens.erase(tokens.end());
+            
+            parse_ordinary_equation(op_count, tokens, signals_list, operation_list);
+            b_new.add_from_list(operation_list.back());
+            branch_list.push_back(b_new);
+            branch_level ++;
+            branch_direction = true;
+        }
+    
+        // Handle for loops
+        if(tokens[0] == "for")
+        {
+            string name = "loop_" + int2string(op_count);
+            branch_type type = loop;
+            branch_block b_new(name, type);
+            
+            branch_list.push_back(b_new);
+            branch_level ++;
+            branch_direction = true;
+            
+        }
+
+        if(tokens[0] == "else")
+        {
+            branch_direction = false;
+        }
+
+        if(tokens[0] == "}" || tokens.back() == "}")
+        {
+            branch_level --;
+            branch_direction = true;
+        }
+
+
+    
         // Found variable type and size
         for(map<signal_type, string>::iterator it = stype_map.begin(); it!= stype_map.end(); it++)
         {
@@ -57,9 +236,9 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
                 curr_stype = it->first;
                 type_found = true;
                 
-                if(tokens[1].find("UInt") != string::npos)  curr_sign = unsign;
-                else    curr_sign = sign;
-                if(curr_sign == unsign) curr_width = atoi(tokens[1].erase(0,4).c_str());
+                if(tokens[1].find("UInt") != string::npos)  curr_sign = unsigns;
+                else    curr_sign = signs;
+                if(curr_sign == unsigns) curr_width = atoi(tokens[1].erase(0,4).c_str());
                 else curr_width = atoi(tokens[1].erase(0,3).c_str());
                 size_found = true;
                 
@@ -104,14 +283,15 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
                 }
                 if(defined == false)    
                 {
-                    printf("Found unrecongized token: %s. Program exit.\n", it);
+                    printf("Found unrecongized token: %s. Program exit.\n", *it->c_str());
                     return;
                 }
             }
             
+            
+            //Parse ordinary equation
             if (tokens[1] == "=")
             {
-                equation_found = true;
                 tokens.erase(tokens.begin()+1);
                                 
                 // Found operator
@@ -122,14 +302,10 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
                         string tmp = *it2 + *(it2+1);
                         if(tmp == it->second)   
                         {
-                            curr_otype = it->first;
                             op_found = 2;
-                            char count[10];
-                            sprintf(count, "%d", op_count);
-                            op_count ++;
-                            string  name = it->second + string(count);
+                            string  name = it->second + "_" +int2string(op_count);
                             operation o_new(name, it->first);
-                            o_new.set_sign(unsign);
+                            o_new.set_sign(unsigns);
                             operation_list.push_back(o_new);
                             tokens.erase(it2);
                             tokens.erase(it2+1);
@@ -137,14 +313,10 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
                         }
                         if(*it2 == it->second)
                         {
-                            curr_otype = it->first;
                             op_found = 1;
-                            char count[10];
-                            sprintf(count, "%d", op_count);
-                            op_count ++;
-                            string  name = it->second + string(count);
+                            string  name = it->second + "_" +int2string(op_count);
                             operation o_new(name, it->first);
-                            o_new.set_sign(unsign);
+                            o_new.set_sign(unsigns);
                             operation_list.push_back(o_new);
                             tokens.erase(it2);
                             break;
@@ -175,13 +347,17 @@ void parse_line(fstream fin, vector<signals> signals_list, vector<operation> ope
                         {
                             it->add_to_op(operation_list.back());
                             operation_list.back().add_from_signal(*it);
-                            if(it->get_sign() == sign)  operation_list.back().set_sign(sign);
+                            if(it->get_sign() == signs)  operation_list.back().set_sign(signs);
                             tokens.erase(it1);
                             continue;
                         }
                     }
                 }
             }
+        
+        
+        
+        
         }
     }
 }
