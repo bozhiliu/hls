@@ -44,11 +44,11 @@ operation::operation(string _name, operation_type _otype)
 }
 
 
-void operation::add_to_signal(signals& to){
+void operation::add_to_signal(signals to){
     to_list.push_back(to);
 }
 
-void operation::add_from_signal(signals& from){
+void operation::add_from_signal(signals from){
     from_list.push_back(from);
 }
 
@@ -79,11 +79,11 @@ string signals::get_name(){
     return this->name;
 }
 
-void signals::add_from_op(operation& op){
+void signals::add_from_op(operation op){
     from_list.push_back(op);
 }
 
-void signals::add_to_op(operation& op){
+void signals::add_to_op(operation op){
     to_list.push_back(op);
 }
 
@@ -103,10 +103,10 @@ branch_block::branch_block(string _name, branch_type _type){
 
 
 
-void branch_block::add_bb_list(pair<operation, bool>& p_in){
+void branch_block::add_bb_list(pair<operation, bool> p_in){
     bb_list.push_back(p_in);
 }
 
-void branch_block::add_from_list(operation& sin){
+void branch_block::add_from_list(operation sin){
     from_list.push_back(sin);
 }

@@ -1,6 +1,8 @@
 #include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
+#include <iostream>
 #include "data_type.h"
 
 

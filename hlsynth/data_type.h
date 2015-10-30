@@ -30,8 +30,8 @@ private:
     vector<signals> to_list;
 public:
     operation(string _name, operation_type _otype);
-    void add_to_signal(signals& to);
-    void add_from_signal(signals& from);
+    void add_to_signal(signals to);
+    void add_from_signal(signals from);
     void set_size(unsigned int _size);
     void set_sign(sign_type s);
     void set_type(operation_type _type);
@@ -50,8 +50,8 @@ private:
 public:
     signals(string _name, signal_type _type, unsigned int _size, sign_type _sign); 
     string get_name();
-    void add_from_op(operation& op);
-    void add_to_op(operation& op);
+    void add_from_op(operation op);
+    void add_to_op(operation op);
     unsigned int get_size();
     sign_type get_sign();
 };
@@ -65,6 +65,6 @@ private:
     vector<pair<operation,bool> > bb_list;
 public:
     branch_block(string _name, branch_type _type);
-    void add_bb_list(pair<operation, bool>& p_in);
-    void add_from_list(operation& op);
+    void add_bb_list(pair<operation, bool> p_in);
+    void add_from_list(operation op);
 };
