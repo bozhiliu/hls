@@ -1,7 +1,7 @@
 #ifndef _SCHEDULING
 #define _SCHEDULING
 
-
+#include <algorithm>
 #include "data_type.h"
 
 class sequence_graph{

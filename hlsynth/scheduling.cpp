@@ -62,29 +62,62 @@ void sequence_graph::create_sequence_graph(vector<signals>& signals_list, vector
 
 void sequence_graph::asap_schedule(){
     asap.resize(s_graph.size(), 0);
-    int size_count = s_graph.size();
+    unsigned long size_count = s_graph.size();
     for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
         vector<node> from_tmp = it->get_from_list();
-        if(from_tmp.size() == 0)    asap[distance(s_graph.begin(), it)] = 1;
-        size_count --;
+        if(from_tmp.size() == 0)  {  asap[distance(s_graph.begin(), it)] = 1;
+            size_count --;}
     }
     
     while(size_count != 0)
     {
         for(vector<node>::iterator it = s_graph.begin(); it!= s_graph.end(); it++){
-            pos = distance(s_graph.begin(), it);
+            long pos = distance(s_graph.begin(), it);
             if(asap[pos] == 0){
                 bool ready = true;
-                int max_time = 0;
+                unsigned int max_time = 0;
                 // check if from predecessor has all completed
                 vector<node> from_tmp = it->get_from_list();
                 for(vector<node>::iterator it2 = from_tmp.begin(); it2 != from_tmp.end(); it2++){
-                    pos2 = distance(s_graph.begin(), it2);
+                    long pos2 = distance(s_graph.begin(), it2);
                     if(asap[pos2] == 0) { ready = false;    break;}
-                    else {  max_time = max(max_time, asap[pos2] + it->get_latency()); }
+                    else {  max_time = std::max(max_time, asap[pos2] + it2->get_latency()); }
                 }
                 if(ready == true){  asap[pos]   = max_time; size_count --;}
             }
+            
         }
+    }
+}
+
+
+void sequence_graph::alap_schedule(unsigned int bound){
+    alap.resize(s_graph.size(),0);
+    unsigned long size_count = s_graph.size();
+    for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
+        vector<node> to_tmp = it->get_to_list();
+        if(to_tmp.size() == 0) { alap[distance(s_graph.begin(),it)] = bound + 1 - it->get_latency();
+            size_count -- ;}
+    }
+    
+    while (size_count != 0){
+        for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
+            long pos = distance(s_graph.begin(), it);
+            if (alap[pos] == 0){
+                bool ready = true;
+                unsigned int min_time = bound;
+                // check if successor has all been scheduled
+                vector<node> to_tmp = it->get_from_list();
+                for(vector<node>::iterator it2 = to_tmp.begin(); it2 != to_tmp.end(); it2++){
+                    long pos2 = distance(s_graph.begin(), it2);
+                    if(alap[pos2] == 0) {   ready = false; break;}
+                    else    {   min_time = std::min(min_time, alap[pos2] - it->get_latency());}
+                }
+                if(ready == true)   {alap[pos] = min_time; size_count -- ;}
+            }
+        }
+        
+        
+        
     }
 }
