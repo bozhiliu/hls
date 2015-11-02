@@ -171,7 +171,7 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
 
 }
 
-void parse_line(fstream fin, vector<signals>& signals_list, vector<operation>& operation_list, vector<branch_block>& branch_list){
+void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& operation_list, vector<branch_block>& branch_list){
     string line;
     vector<string> tokens;
     int branch_level = -1;
@@ -318,7 +318,8 @@ void parse_line(fstream fin, vector<signals>& signals_list, vector<operation>& o
             
             //Parse ordinary equation
             parse_ordinary_equation(op_count, tokens, signals_list, operation_list);
-            if(branch_level_base + branch_level != -1)  branch_list[branch_level].add_bb_list(make_pair(operation_list.back(), branch_direction));
+            pair<operation, bool> tmp(operation_list.back(), branch_direction);
+            if(branch_level_base + branch_level != -1)  branch_list[branch_level].add_bb_list(tmp);
         }
     }
 }
