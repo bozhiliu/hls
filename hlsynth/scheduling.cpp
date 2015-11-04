@@ -155,13 +155,53 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
         self_force.resize(interval, 0); other_force.resize(interval,0); total_force.resize(interval,0);
         operation_type curr_type = it->get_type();
         for( unsigned int index = left-1; index < right; index ++){
+            
+            // Calculate self force
             float self = 0;
             while(sweeper < interval){
                 if(sweeper == index)    self += (1-prob)*probability[curr_type][index];
                 else    self += (0-prob)*probability[curr_type][index];
                 sweeper ++;
             }
-            self_force.push_back(self);
+            self_force[index - left +1] = self;
+            
+            // Calculate predecessor force
+            float pred = 0;
+            for(vector<node>::iterator it1 = it->get_from_list().begin(); it1 != it->get_from_list().end(); it1++){
+                unsigned int pred_left = asap[distance(s_graph.begin(), it1)];
+                unsigned int pred_right = alap[distance(s_graph.begin(), it1)];
+                unsigned int pred_right_n = min(index, pred_right);
+                unsigned int pred_interval = pred_right - pred_left +1;
+                operation_type pred_type = it1->get_type();
+                if(pred_left == pred_right_n){
+                    unsigned int pred_sweeper = pred_left-1;
+                    while(pred_sweeper < pred_interval){
+                        if(pred_sweeper == pred_left)   pred += (1-1/pred_interval)*probability[pred_type][pred_sweeper];
+                        else pred += (0 - 1/pred_interval)*probability[pred_type][pred_sweeper];
+                        pred_sweeper ++;
+                    }
+                }
+            }
+            
+            // Calculate successor force
+            float suc = 0;
+            for(vector<node>::iterator it1 = it->get_to_list().begin(); it1 != it->get_to_list().end(); it1++){
+                unsigned int suc_left = asap[distance(s_graph.begin(), it1)];
+                unsigned int suc_right = alap[distance(s_graph.begin(), it1)];
+                unsigned int suc_left_n = max(index, suc_left);
+                unsigned int suc_interval = suc_right - suc_left +1;
+                operation_type suc_type = it1->get_type();
+                if(suc_right == suc_left_n){
+                    unsigned int suc_sweeper = suc_left-1;
+                    while(suc_sweeper < suc_interval){
+                        if(suc_sweeper == suc_right)   suc += (1-1/suc_interval)*probability[suc_type][suc_sweeper];
+                        else pred += (0 - 1/suc_interval)*probability[suc_type][suc_sweeper];
+                        suc_sweeper ++;
+                    }
+                }
+            }
+            other_force[index - left + 1] = suc + pred;
+            tot_force[index - left + 1] = other_force[index-left+1] + self_force[index-left+1];
         }
         
     }
