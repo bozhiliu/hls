@@ -116,8 +116,66 @@ void sequence_graph::alap_schedule(unsigned int bound){
                 if(ready == true)   {alap[pos] = min_time; size_count -- ;}
             }
         }
-        
-        
-        
     }
 }
+
+
+
+void sequence_graph::force_directed_schedule(unsigned int bound){
+    map<operation_type, vector<float>> probability;
+    for(map<operation_type,string>::iterator it = otype_map.begin(); it != otype_map.end(); it++){
+        vector<float> array;
+        array.resize(bound, 0);
+        pair<operation_type, vector<float>> pair_n(it->first, array);
+        probability.insert(pair_n);
+    }
+    // Calculate type distribution
+    for(int index=0; index < asap.size(); index ++){
+        unsigned int left = asap[index];
+        unsigned int right = alap[index];
+        float prob = 1 / (right + 1 - left);
+        operation_type curr_type = s_graph[index].get_type();
+        for(unsigned int it = left-1; it != right; it++){
+            probability[curr_type][it] += prob;
+        }
+    }
+    
+    // Calculate total force for all nodes
+    vector<float> tot_force;    tot_force.resize(s_graph.size(),0);
+    for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
+        
+        vector<float> self_force;
+        vector<float> other_force;
+        vector<float> total_force;
+        unsigned int left = asap[distance(s_graph.begin(), it)];
+        unsigned int right = alap[distance(s_graph.begin(), it)];
+        unsigned int interval = right-left + 1;
+        unsigned int sweeper = left-1;
+        float prob = 1 / interval;
+        self_force.resize(interval, 0); other_force.resize(interval,0); total_force.resize(interval,0);
+        operation_type curr_type = it->get_type();
+        for( unsigned int index = left-1; index < right; index ++){
+            float self = 0;
+            while(sweeper < interval){
+                if(sweeper == index)    self += (1-prob)*probability[curr_type][index];
+                else    self += (0-prob)*probability[curr_type][index];
+                sweeper ++;
+            }
+            self_force.push_back(self);
+        }
+        
+    }
+    
+    
+    
+    
+    
+}
+
+
+
+
+
+
+
+

@@ -100,6 +100,7 @@ public:
     vector<node>& get_to_list();
     string get_name();
     unsigned int get_latency();
+    operation_type get_type();
 };
 
 

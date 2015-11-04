@@ -181,3 +181,7 @@ string node::get_name(){
 unsigned int node::get_latency(){
     return latency;
 }
+
+operation_type node::get_type(){
+    return type;
+}
