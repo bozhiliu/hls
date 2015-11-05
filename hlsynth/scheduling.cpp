@@ -122,93 +122,140 @@ void sequence_graph::alap_schedule(unsigned int bound){
 
 
 void sequence_graph::force_directed_schedule(unsigned int bound){
-    map<operation_type, vector<float>> probability;
+    
+    force.resize(asap.size(), 0);
+    
+    map<operation_type, vector<float> > probability;
     for(map<operation_type,string>::iterator it = otype_map.begin(); it != otype_map.end(); it++){
         vector<float> array;
         array.resize(bound, 0);
-        pair<operation_type, vector<float>> pair_n(it->first, array);
+        pair<operation_type, vector<float> > pair_n(it->first, array);
         probability.insert(pair_n);
     }
-    // Calculate type distribution
-    for(int index=0; index < asap.size(); index ++){
-        unsigned int left = asap[index];
-        unsigned int right = alap[index];
-        float prob = 1 / (right + 1 - left);
-        operation_type curr_type = s_graph[index].get_type();
-        for(unsigned int it = left-1; it != right; it++){
-            probability[curr_type][it] += prob;
-        }
-    }
     
-    // Calculate total force for all nodes
-    vector<float> tot_force;    tot_force.resize(s_graph.size(),0);
-    for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
-        
-        vector<float> self_force;
-        vector<float> other_force;
-        vector<float> total_force;
-        unsigned int left = asap[distance(s_graph.begin(), it)];
-        unsigned int right = alap[distance(s_graph.begin(), it)];
-        unsigned int interval = right-left + 1;
-        unsigned int sweeper = left-1;
-        float prob = 1 / interval;
-        self_force.resize(interval, 0); other_force.resize(interval,0); total_force.resize(interval,0);
-        operation_type curr_type = it->get_type();
-        for( unsigned int index = left-1; index < right; index ++){
-            
-            // Calculate self force
-            float self = 0;
-            while(sweeper < interval){
-                if(sweeper == index)    self += (1-prob)*probability[curr_type][index];
-                else    self += (0-prob)*probability[curr_type][index];
-                sweeper ++;
+    unsigned int size_count = asap.size();
+    
+    while( size_count != 0)
+    {
+        // Calculate type distribution
+        for(unsigned int index=0; index < asap.size(); index ++){
+            operation_type curr_type = s_graph[index].get_type();
+            if(force[index] != 0)
+            {
+                probability[curr_type][force[index]] += 1;
+                continue;
             }
-            self_force[index - left +1] = self;
-            
-            // Calculate predecessor force
-            float pred = 0;
-            for(vector<node>::iterator it1 = it->get_from_list().begin(); it1 != it->get_from_list().end(); it1++){
-                unsigned int pred_left = asap[distance(s_graph.begin(), it1)];
-                unsigned int pred_right = alap[distance(s_graph.begin(), it1)];
-                unsigned int pred_right_n = min(index, pred_right);
-                unsigned int pred_interval = pred_right - pred_left +1;
-                operation_type pred_type = it1->get_type();
-                if(pred_left == pred_right_n){
-                    unsigned int pred_sweeper = pred_left-1;
-                    while(pred_sweeper < pred_interval){
-                        if(pred_sweeper == pred_left)   pred += (1-1/pred_interval)*probability[pred_type][pred_sweeper];
-                        else pred += (0 - 1/pred_interval)*probability[pred_type][pred_sweeper];
-                        pred_sweeper ++;
-                    }
-                }
+            unsigned int left = asap[index];
+            unsigned int right = alap[index];
+            float prob = 1 / (right + 1 - left);
+            for(unsigned int it = left-1; it != right; it++){
+                probability[curr_type][it] += prob;
             }
-            
-            // Calculate successor force
-            float suc = 0;
-            for(vector<node>::iterator it1 = it->get_to_list().begin(); it1 != it->get_to_list().end(); it1++){
-                unsigned int suc_left = asap[distance(s_graph.begin(), it1)];
-                unsigned int suc_right = alap[distance(s_graph.begin(), it1)];
-                unsigned int suc_left_n = max(index, suc_left);
-                unsigned int suc_interval = suc_right - suc_left +1;
-                operation_type suc_type = it1->get_type();
-                if(suc_right == suc_left_n){
-                    unsigned int suc_sweeper = suc_left-1;
-                    while(suc_sweeper < suc_interval){
-                        if(suc_sweeper == suc_right)   suc += (1-1/suc_interval)*probability[suc_type][suc_sweeper];
-                        else pred += (0 - 1/suc_interval)*probability[suc_type][suc_sweeper];
-                        suc_sweeper ++;
-                    }
-                }
-            }
-            other_force[index - left + 1] = suc + pred;
-            tot_force[index - left + 1] = other_force[index-left+1] + self_force[index-left+1];
         }
         
+        // Calculate total force for all nodes
+        // Latency
+
+        float iteration_max_force = 0;
+        unsigned int iteration_schedule = 0;
+        unsigned int iteration_index = 0;
+        for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
+            int pos  = distance(s_graph.begin(), it);
+            if(force[pos] != 0)     continue;
+            
+            vector<float> self_force;
+            vector<float> other_force;
+            vector<float> total_force;
+            unsigned int left = asap[distance(s_graph.begin(), it)];
+            unsigned int right = alap[distance(s_graph.begin(), it)];
+            // Modified interval
+            
+            unsigned int interval = right-left + 1;
+            unsigned int sweeper = left-1;
+            float prob = 1 / interval;
+            self_force.resize(interval, 0); other_force.resize(interval,0); total_force.resize(interval,0);
+            operation_type curr_type = it->get_type();
+            for( unsigned int index = left-1; index < right; index ++){
+                
+                // Calculate self force
+                float self = 0;
+                while(sweeper < interval){
+                    if(sweeper == index)    self += (1-prob)*probability[curr_type][index];
+                    else    self += (0-prob)*probability[curr_type][index];
+                    sweeper ++;
+                }
+                self_force[index - left +1] = self;
+                
+                // Calculate predecessor force
+                float pred = 0;
+                for(vector<node>::iterator it1 = it->get_from_list().begin(); it1 != it->get_from_list().end(); it1++){
+                    int pred_pos = distance(s_graph.begin(), it1);
+                    if(force[pred_pos] != 0)    continue;
+                    unsigned int pred_left = asap[distance(s_graph.begin(), it1)];
+                    unsigned int pred_right = alap[distance(s_graph.begin(), it1)];
+                    unsigned int pred_right_n = min(index+1-it1->get_latency(), pred_right);
+                    unsigned int pred_interval = pred_right - pred_left +1;
+                    operation_type pred_type = it1->get_type();
+                    if(pred_left == pred_right_n){
+                        unsigned int pred_sweeper = pred_left-1;
+                        while(pred_sweeper < pred_right){
+                            if(pred_sweeper == pred_left-1)   pred += (1-1/pred_interval)*probability[pred_type][pred_sweeper];
+                            else pred += (0 - 1/pred_interval)*probability[pred_type][pred_sweeper];
+                            pred_sweeper ++;
+                        }
+                    }
+                }
+                
+                // Calculate successor force
+                float suc = 0;
+                for(vector<node>::iterator it1 = it->get_to_list().begin(); it1 != it->get_to_list().end(); it1++){
+                    int suc_pos = distance(s_graph.begin(), it1);
+                    if(force[suc_pos] != 0)     continue;
+                    unsigned int suc_left = asap[distance(s_graph.begin(), it1)];
+                    unsigned int suc_right = alap[distance(s_graph.begin(), it1)];
+                    unsigned int suc_left_n = max(index+1+it->get_latency(), suc_left);
+                    unsigned int suc_interval = suc_right - suc_left +1;
+                    operation_type suc_type = it1->get_type();
+                    if(suc_right == suc_left_n){
+                        unsigned int suc_sweeper = suc_left-1;
+                        while(suc_sweeper < suc_right){
+                            if(suc_sweeper == suc_right-1)   suc += (1-1/suc_interval)*probability[suc_type][suc_sweeper];
+                            else pred += (0 - 1/suc_interval)*probability[suc_type][suc_sweeper];
+                            suc_sweeper ++;
+                        }
+                    }
+                }
+                other_force[index - left + 1] = suc + pred;
+                total_force[index - left + 1] = other_force[index-left+1] + self_force[index-left+1];
+            }
+            
+            // Find the maximum tot_force amoung all possibilities and store the force_value/node/schedule_time to outside
+            
+            float force_max = 0;
+            unsigned int schedule = 0;
+            for(vector<float>::iterator it = total_force.begin(); it != total_force.end(); it++){
+                if(*it > force_max) { force_max = *it;  schedule = left + distance(total_force.begin(), it); } 
+            }
+           if(force_max > iteration_max_force)  {
+               iteration_max_force = force_max;
+               iteration_index = pos;
+               iteration_schedule = schedule;
+           }
+        }
+        
+        // Update the schedule
+        force[iteration_index] = iteration_schedule;
+        size_count --;
+        
+        // Clear the distribution graph
+        probability.clear();
+        for(map<operation_type,string>::iterator it = otype_map.begin(); it != otype_map.end(); it++){
+            vector<float> array;
+            array.resize(bound, 0);
+            pair<operation_type, vector<float> > pair_n(it->first, array);
+            probability.insert(pair_n);
+        }
     }
-    
-    
-    
-    
     
 }
 

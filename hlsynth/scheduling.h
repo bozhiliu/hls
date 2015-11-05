@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "data_type.h"
 
+
 class sequence_graph{
 private:
     vector<node> s_graph;
