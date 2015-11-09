@@ -1,6 +1,7 @@
 #include "parser.h"
 
 
+
 vector<string> tokenize(string sin){
     string tmp = "";
     vector<string> tokens;
@@ -183,6 +184,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
         tokens.clear();
         getline(fin, line);
         tokens = tokenize(line);
+        show_str_vec(tokens);
         if(tokens.size() == 0)  continue;
     
         bool type_found = false;

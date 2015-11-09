@@ -1,11 +1,11 @@
+#ifndef _DATA_TYPE
+#define _DATA_TYPE
+
 #include "stdio.h"
 #include "stdlib.h"
 #include <vector>
 #include <string>
 #include <map>
-
-#ifndef _DATA_TYPE
-#define _DATA_TYPE
 
 using namespace std;
 enum operation_type {add, subtract, multiply, smaller, bigger, equals, evaluate, shift_right, shift_left, divide, modulo, increment, decrement, nop};
@@ -102,6 +102,8 @@ public:
     unsigned int get_latency();
     operation_type get_type();
 };
+
+
 
 
 #endif
