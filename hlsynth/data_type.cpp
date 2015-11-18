@@ -7,7 +7,7 @@ void initial_delimiter(){
     delimiter.push_back(' ');
     delimiter.push_back(';');
     delimiter.push_back(',');
-    delimiter.push_back('?');
+    delimiter.push_back(':');
     delimiter.push_back('(');
     delimiter.push_back(')');
 }

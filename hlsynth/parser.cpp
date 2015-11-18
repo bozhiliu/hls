@@ -9,7 +9,7 @@ vector<string> tokenize(string sin){
     for(unsigned int count = 0; count < sin.length(); count++)
     {
         no_append = false;
-        if(sin[count] == '/' and sin[count+1] == '/')   break;
+        if(sin[count] == '/' && sin[count+1] == '/')   break;
         for(vector<char>::iterator it = delimiter.begin(); it != delimiter.end(); it++)
         {
             if(sin[count] == *it)
@@ -29,7 +29,7 @@ vector<string> tokenize(string sin){
 
 string int2string(int op_count){
     char count[10];
-    sprintf(count, "%d", op_count);
+    sprintf_s(count, "%d", op_count);
     op_count ++;
     return string(count);
 }
@@ -42,7 +42,7 @@ bool is_signal(string sin, vector<signals>& signals_list){
 }
 
 
-void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list){
+void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list){
     
     // handle normal equations a = b X c
     if(tokens[1] == "="){
@@ -53,22 +53,27 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
         {
             for(vector<string>::iterator it2 = tokens.begin(); it2!= tokens.end(); it2++)
             {
-                string tmp = *it2 + *(it2+1);
-                if(tmp == it->second)   
-                {
-                    op_found = 2;
-                    string  name = it->second + "_" +int2string(op_count);
-                    operation o_new(name, it->first);
-                    o_new.set_sign(unsigns);
-                    operation_list.push_back(o_new);
-                    tokens.erase(it2);
-                    tokens.erase(it2+1);
-                    break;
-                }
+				if (it2 != tokens.end()-1) 
+				{
+					string tmp = *it2 + *(it2 + 1);
+					if (tmp == it->second)
+					{
+						op_found = 2;
+						string  name = it->second + "_" + int2string(op_count);
+						op_count++;
+						operation o_new(name, it->first);
+						o_new.set_sign(unsigns);
+						operation_list.push_back(o_new);
+						tokens.erase(it2);
+						tokens.erase(it2 + 1);
+						break;
+					}
+				}
                 if(*it2 == it->second)
                 {
                     op_found = 1;
                     string  name = it->second + "_" +int2string(op_count);
+					op_count++;
                     operation o_new(name, it->first);
                     o_new.set_sign(unsigns);
                     operation_list.push_back(o_new);
@@ -76,8 +81,9 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
                     break;
                 }
             }
-            if (op_found != 0)   break;
+			if (op_found == 1)	break;
         }
+		if (op_found == 0)	return;
                 
         // Found to signal
         for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
@@ -101,8 +107,8 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
                     it->add_to_op(operation_list.back());
                     operation_list.back().add_from_signal(*it);
                     if(it->get_sign() == signs)  operation_list.back().set_sign(signs);
-                    tokens.erase(it1);
-                    continue;
+                    //tokens.erase(it1);
+                    break;
                 }
             }
         }        
@@ -115,6 +121,7 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
         string signal_name = "condition_out_" + int2string(op_count);
         signals s_new(signal_name, variable, 1, unsigns);
         string op_name = tokens[1] + "_" + int2string(op_count);
+		op_count++;
         operation_type op_type;
         if(tokens[1] == "==")   op_type = equals;
         if(tokens[1] == "<")    op_type = smaller;
@@ -127,7 +134,7 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
         {
             if(it->get_name() == tokens[0]) { 
                 o_new.add_from_signal(*it); 
-                o_new.set_size(max(o_new.get_size(), it->get_size()));
+                o_new.set_size(std::max(o_new.get_size(), it->get_size()));
                 if (it->get_sign() == signs)    o_new.set_sign(signs);
                 break;  }
         }
@@ -152,6 +159,7 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
         string signal_name = "condition_out_" + int2string(op_count);
         signals s_new(signal_name, variable, 1, unsigns);
         string op_name = "eval_"+int2string(op_count);
+		op_count++;
         operation o_new(op_name, equals);
         o_new.set_sign(unsigns);
         o_new.set_size(0);
@@ -169,7 +177,7 @@ void parse_ordinary_equation(unsigned int op_count, vector<string>& tokens, vect
         signals_list.push_back(s_new);
         return;
     }
-
+	
 }
 
 void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& operation_list, vector<branch_block>& branch_list){
@@ -178,6 +186,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
     int branch_level = -1;
     int branch_level_base = 0;
     int branch_inc = 0;
+	unsigned int op_count = 0;
     bool branch_direction = true;
     while(!fin.eof())
     {
@@ -189,7 +198,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
     
         bool type_found = false;
         bool size_found = false;
-        int op_count = 0;
+        
         signal_type curr_stype;
         sign_type curr_sign;
         unsigned int curr_width;
@@ -309,9 +318,10 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
                         break;
                     }
                 }
+				if (*it == "=")	defined = true;
                 if(defined == false)    
                 {
-                    //printf("Found unrecongized token: %s. Program exit.\n", *it->c_str());
+                    printf("Found unrecongized token: %s. Program exit.\n", *it->c_str());
                     cout << *it << endl;
                     return;
                 }
