@@ -44,11 +44,11 @@ operation::operation(string _name, operation_type _otype)
 }
 
 
-void operation::add_to_signal(signals& to){
+void operation::add_to_signal(signals* to){
     to_list.push_back(to);
 }
 
-void operation::add_from_signal(signals& from){
+void operation::add_from_signal(signals* from){
     from_list.push_back(from);
 }
 
@@ -76,21 +76,21 @@ operation_type operation::get_type(){
     return type;
 }
 
-void operation::set_node(node *_node){
+void operation::set_node(unsigned int _node){
     s_node = _node;
 }
 
 
-vector<signals>& operation::get_from_list(){
+vector<signals*> operation::get_from_list(){
     return from_list;
 }
 
-vector<signals>& operation::get_to_list(){
+vector<signals*> operation::get_to_list(){
     return to_list;
 }
 
-node& operation::get_node(){
-    return *s_node;
+unsigned int operation::get_node(){
+    return s_node;
 }
 
 signals::signals(string _name, signal_type _type, unsigned int _size, sign_type _sign){
@@ -104,11 +104,11 @@ string signals::get_name(){
     return this->name;
 }
 
-void signals::add_from_op(operation& op){
+void signals::add_from_op(operation* op){
     from_list.push_back(op);
 }
 
-void signals::add_to_op(operation& op){
+void signals::add_to_op(operation* op){
     to_list.push_back(op);
 }
 
@@ -120,11 +120,11 @@ sign_type signals::get_sign(){
     return sign;
 }
 
-vector<operation>& signals::get_from_list(){
+vector<operation*> signals::get_from_list(){
     return from_list;
 } 
 
-vector<operation>& signals::get_to_list(){
+vector<operation*> signals::get_to_list(){
     return to_list;
 }
 
@@ -158,19 +158,19 @@ void node::set_latency(unsigned int _l){
     latency = _l;
 }
 
-void node::add_to_list(node& nin){
+void node::add_to_list(node* nin){
     this->to_list.push_back(nin);
 }
 
-void node::add_from_list(node& nin){
+void node::add_from_list(node* nin){
     this->from_list.push_back(nin);
 }
 
-vector<node>& node::get_from_list(){
+vector<node*> node::get_from_list(){
     return from_list;
 }
 
-vector<node>& node::get_to_list(){
+vector<node*> node::get_to_list(){
     return to_list;
 }
 

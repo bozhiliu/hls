@@ -42,7 +42,43 @@ bool is_signal(string sin, vector<signals>& signals_list){
 }
 
 
-void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list){
+void link_signal_operation(vector<vector<string> >& operator_signal_tokens, vector<signals>& signals_list, vector<operation>& operation_list) {
+	for (vector<vector<string> >::iterator itt = operator_signal_tokens.begin(); itt != operator_signal_tokens.end(); itt++) {
+		vector<string> tokens = *itt;
+		long pos = distance(operator_signal_tokens.begin(), itt);
+		// Found to signal
+		for (vector<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
+		{
+			if (tokens[0] == it->get_name())
+			{
+				it->add_from_op(&operation_list.at(pos));
+				operation_list.at(pos).add_to_signal(&(*it));
+				operation_list.at(pos).set_size(it->get_size());
+				tokens.erase(tokens.begin());
+				break;
+			}
+		}
+		// Found from signals
+		for (vector<string>::iterator it1 = tokens.begin(); it1 != tokens.end(); it1++)
+		{
+			for (vector<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
+			{
+				if (*it1 == it->get_name())
+				{
+					it->add_to_op(&operation_list.at(pos));
+					operation_list.at(pos).add_from_signal(&(*it));
+					if (it->get_sign() == signs)  operation_list.at(pos).set_sign(signs);
+					//tokens.erase(it1);
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+
+void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vector<signals>& signals_list, vector<operation>& operation_list, vector<vector<string> > &operator_signal_tokens){
     
     // handle normal equations a = b X c
     if(tokens[1] == "="){
@@ -66,6 +102,7 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
 						operation_list.push_back(o_new);
 						tokens.erase(it2);
 						tokens.erase(it2 + 1);
+						operator_signal_tokens.push_back(tokens);
 						break;
 					}
 				}
@@ -78,20 +115,22 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
                     o_new.set_sign(unsigns);
                     operation_list.push_back(o_new);
                     tokens.erase(it2);
+					operator_signal_tokens.push_back(tokens);
                     break;
                 }
             }
 			if (op_found == 1)	break;
         }
 		if (op_found == 0)	return;
-                
+        
+		/*
         // Found to signal
         for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
         {
             if(tokens[0] == it->get_name())
             {
-                it->add_from_op(operation_list.back());
-                operation_list.back().add_to_signal(*it);
+                it->add_from_op(&operation_list.back());
+                operation_list.back().add_to_signal(&(*it));
                 operation_list.back().set_size(it->get_size());
                 tokens.erase(tokens.begin());
                 break;
@@ -104,16 +143,18 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
             {
                 if(*it1 == it->get_name())
                 {
-                    it->add_to_op(operation_list.back());
-                    operation_list.back().add_from_signal(*it);
+                    it->add_to_op(&operation_list.back());
+                    operation_list.back().add_from_signal(&(*it));
                     if(it->get_sign() == signs)  operation_list.back().set_sign(signs);
                     //tokens.erase(it1);
                     break;
                 }
             }
-        }        
+        }  
+	*/
     return;
     }
+
 
     // Handle comparison statements like a<b
     if(tokens[1] == "==" || tokens[1] =="<" || tokens[1] == ">"){
@@ -133,7 +174,7 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
         for(vector<signals>::iterator it = signals_list.begin(); it != signals_list.end(); it++)
         {
             if(it->get_name() == tokens[0]) { 
-                o_new.add_from_signal(*it); 
+                o_new.add_from_signal(&(*it)); 
                 o_new.set_size(std::max(o_new.get_size(), it->get_size()));
                 if (it->get_sign() == signs)    o_new.set_sign(signs);
                 break;  }
@@ -142,14 +183,14 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
         for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
         {
             if(it->get_name() == tokens[2]) { 
-                o_new.add_from_signal(*it); 
+                o_new.add_from_signal(&(*it)); 
                 o_new.set_size(max(o_new.get_size(), it->get_size()));
                 if (it->get_sign() == signs)    o_new.set_sign(signs);
                 break;}
         }
-        o_new.add_to_signal(s_new);
+        o_new.add_to_signal(&s_new);
         operation_list.push_back(o_new);
-        s_new.add_from_op(o_new);
+        s_new.add_from_op(&o_new);
         signals_list.push_back(s_new);
         return;
     }
@@ -166,14 +207,14 @@ void parse_ordinary_equation(unsigned int& op_count, vector<string>& tokens, vec
         for(vector<signals>::iterator it = signals_list.begin(); it!= signals_list.end(); it++)
         {
             if(it->get_name() == tokens[0]){
-                o_new.add_from_signal(*it);
+                o_new.add_from_signal(&(*it));
                 o_new.set_size(max(o_new.get_size(), it->get_size()));
                 if (it->get_sign() == signs)    o_new.set_sign(signs);
                 break;  }
         }
-        o_new.add_to_signal(s_new);
+        o_new.add_to_signal(&s_new);
         operation_list.push_back(o_new);
-        s_new.add_from_op(o_new);
+        s_new.add_from_op(&o_new);
         signals_list.push_back(s_new);
         return;
     }
@@ -188,6 +229,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
     int branch_inc = 0;
 	unsigned int op_count = 0;
     bool branch_direction = true;
+	vector<vector<string> > operator_signal_tokens;
     while(!fin.eof())
     {
         tokens.clear();
@@ -213,7 +255,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
             tokens.erase(tokens.begin());
             if(tokens.back() == "{")    tokens.erase(tokens.end());
             
-            parse_ordinary_equation(op_count, tokens, signals_list, operation_list);
+            parse_ordinary_equation(op_count, tokens, signals_list, operation_list, operator_signal_tokens);
             b_new.add_from_list(operation_list.back());
             branch_list.push_back(b_new);
             branch_level ++;
@@ -236,7 +278,7 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
                 tmp.push_back(tokens[0]);
                 tokens.erase(tokens.begin());
                 if (is_signal(tmp.back(), signals_list)){
-                    parse_ordinary_equation(op_count, tmp, signals_list, operation_list);
+                    parse_ordinary_equation(op_count, tmp, signals_list, operation_list, operator_signal_tokens);
                     b_new.add_from_list(operation_list.back());
                     tmp.clear();
                 }
@@ -329,9 +371,10 @@ void parse_line(fstream& fin, vector<signals>& signals_list, vector<operation>& 
             
             
             //Parse ordinary equation
-            parse_ordinary_equation(op_count, tokens, signals_list, operation_list);
+            parse_ordinary_equation(op_count, tokens, signals_list, operation_list, operator_signal_tokens);
             pair<operation, bool> tmp(operation_list.back(), branch_direction);
             if(branch_level_base + branch_level != -1)  branch_list[branch_level].add_bb_list(tmp);
         }
     }
+	link_signal_operation(operator_signal_tokens, signals_list, operation_list);
 }

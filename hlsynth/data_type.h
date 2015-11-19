@@ -30,23 +30,23 @@ private:
     unsigned int size;
     operation_type type;
     sign_type sign;
-    vector<signals> from_list;
-    vector<signals> to_list;
-    node *s_node;
+    vector<signals*> from_list;
+    vector<signals*> to_list;
+    unsigned int s_node;
 public:
     operation(string _name, operation_type _otype);
-    void add_to_signal(signals& to);
-    void add_from_signal(signals& from);
+    void add_to_signal(signals* to);
+    void add_from_signal(signals* from);
     void set_size(unsigned int _size);
     void set_sign(sign_type s);
     void set_type(operation_type _type);
     unsigned int get_size();
     string get_name();
     operation_type get_type();
-    void set_node(node * _node);
-    vector<signals>& get_from_list();
-    vector<signals>& get_to_list();
-    node& get_node();
+    void set_node(unsigned int _node);
+    vector<signals*> get_from_list();
+    vector<signals*> get_to_list();
+    unsigned int get_node();
 };
 
 
@@ -56,17 +56,17 @@ private:
     unsigned int size;
     signal_type type;
     sign_type sign;
-    vector<operation> from_list;
-    vector<operation> to_list;
+    vector<operation*> from_list;
+    vector<operation*> to_list;
 public:
     signals(string _name, signal_type _type, unsigned int _size, sign_type _sign); 
     string get_name();
-    void add_from_op(operation& op);
-    void add_to_op(operation& op);
+    void add_from_op(operation* op);
+    void add_to_op(operation* op);
     unsigned int get_size();
     sign_type get_sign();
-    vector<operation>& get_from_list();
-    vector<operation>& get_to_list();
+    vector<operation*> get_from_list();
+    vector<operation*> get_to_list();
 };
 
 
@@ -88,16 +88,16 @@ private:
     operation_type type;
     string op_name;
     unsigned int latency;
-    vector<node> from_list;
-    vector<node> to_list;
+    vector<node*> from_list;
+    vector<node*> to_list;
 public:
     void set_type(operation_type _type);
     void set_name(string _name);
     void set_latency(unsigned int _l);
-    void add_from_list(node& nin);
-    void add_to_list(node& nin);
-    vector<node>& get_from_list();
-    vector<node>& get_to_list();
+    void add_from_list(node* nin);
+    void add_to_list(node* nin);
+    vector<node*> get_from_list();
+    vector<node*> get_to_list();
     string get_name();
     unsigned int get_latency();
     operation_type get_type();

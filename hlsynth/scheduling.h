@@ -17,6 +17,8 @@ public:
     void asap_schedule();
     void alap_schedule(unsigned int bound);
     void force_directed_schedule(unsigned int bound);
+	void add_node_to_list(unsigned int _n1, unsigned int _n2, bool type);
+	long get_distance(node nin);
 };
 
 
