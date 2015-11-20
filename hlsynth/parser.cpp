@@ -29,7 +29,7 @@ vector<string> tokenize(string sin){
 
 string int2string(int op_count){
     char count[10];
-    sprintf_s(count, "%d", op_count);
+    sprintf(count, "%d", op_count);
     op_count ++;
     return string(count);
 }

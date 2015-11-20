@@ -141,8 +141,19 @@ void sequence_graph::alap_schedule(unsigned int bound){
     unsigned long size_count = s_graph.size();
     for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
         vector<node*> to_tmp = it->get_to_list();
-        if(to_tmp.size() == 0) { alap[distance(s_graph.begin(),it)] = bound + 1 - it->get_latency();
-            size_count -- ;}
+        bool sink_node_flag = true;
+        for(vector<node*>::iterator it = to_tmp.begin(); it != to_tmp.end(); it++){
+            if((*it)->get_name()!="sink_node")  sink_node_flag = false;
+        }
+        if (to_tmp.size() == 0)
+        {
+            sink_node_flag = false;
+            size_count --;
+        }
+        if( sink_node_flag == true){
+            alap[distance(s_graph.begin(),it)] = bound + 1 - it->get_latency();
+            size_count -- ;
+        }
     }
     
     while (size_count != 0){
@@ -152,13 +163,14 @@ void sequence_graph::alap_schedule(unsigned int bound){
                 bool ready = true;
                 unsigned int min_time = bound;
                 // check if successor has all been scheduled
-                vector<node*> to_tmp = it->get_from_list();
+                vector<node*> to_tmp = it->get_to_list();
                 for(vector<node*>::iterator it2 = to_tmp.begin(); it2 != to_tmp.end(); it2++){
                     long pos2 = get_distance(**it2);
                     if(alap[pos2] == 0) {   ready = false; break;}
                     else    {   min_time = std::min(min_time, alap[pos2] - it->get_latency());}
                 }
-                if(ready == true)   {alap[pos] = min_time; size_count -- ;}
+                if(ready == true && to_tmp.size()!=0)   {alap[pos] = min_time; size_count -- ;}
+                if(ready == true && to_tmp.size()==0)   {alap[pos] = min_time + 1; size_count --;}
             }
         }
     }
