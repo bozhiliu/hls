@@ -6,7 +6,8 @@ void sequence_graph::add_node_to_list(unsigned int _n1, unsigned int _n2, bool t
 	node n2 = s_graph.at(_n2);
 	if (type == true) {
 		if (n1.get_from_list().size() != 0) {
-			for (vector<node*>::iterator it = (n1.get_from_list().begin()); it != (n1.get_from_list().end()); it++) {
+			vector<node*> from_list = n1.get_from_list();
+			for (vector<node*>::iterator it = (from_list.begin()); it != (from_list.end()); it++) {
 				if ((*it)->get_name().compare(n2.get_name()))  return;
 			}
 		}
@@ -15,7 +16,8 @@ void sequence_graph::add_node_to_list(unsigned int _n1, unsigned int _n2, bool t
     
     if(type == false){
 		if (n1.get_to_list().size() != 0) {
-			for (vector<node*>::iterator it = n1.get_to_list().begin(); it != n1.get_to_list().end(); it++) {
+			vector<node*> to_list = n2.get_to_list();
+			for (vector<node*>::iterator it = to_list.begin(); it != to_list.end(); it++) {
 				if ((*it)->get_name() == n2.get_name())   return;
 			}
 		}
@@ -80,7 +82,7 @@ void sequence_graph::create_sequence_graph(vector<signals>& signals_list, vector
 			if (op_to_list.size() == 0)
 			{
 				add_node_to_list(it->get_node(), s_graph.size() - 1, false);
-				add_node_to_list(s_graph.size(), it->get_node(), true);
+				add_node_to_list(s_graph.size()-1, it->get_node(), true);
 			}
 			for (vector<operation*>::iterator it3 = op_to_list.begin(); it3 != op_to_list.end(); it3++) {
                 add_node_to_list(it->get_node(), (*it3)->get_node(), false);
@@ -92,31 +94,44 @@ void sequence_graph::create_sequence_graph(vector<signals>& signals_list, vector
 
 void sequence_graph::asap_schedule(){
     asap.resize(s_graph.size(), 0);
-    unsigned long size_count = s_graph.size();
-    for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
-        vector<node*> from_tmp = it->get_from_list();
-        if(from_tmp.size() == 0)  {  asap[distance(s_graph.begin(), it)] = 1;
-            size_count --;}
-    }
+    long size_count = s_graph.size();
+	for (vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++) {
+		vector<node*> from_tmp = it->get_from_list();
+		bool source_node_flag = true;
+		for(vector<node*>::iterator it1 = from_tmp.begin(); it1 != from_tmp.end(); it1++)
+		{
+			if ((*it1)->get_name() != "source_node")	source_node_flag = false;
+		}
+		if (from_tmp.size() == 0)
+		{
+			source_node_flag = false;
+			size_count--;
+		}	
+		if (source_node_flag == true)
+		{
+			asap[distance(s_graph.begin(), it)] = 1;
+			size_count--;
+		}
+	}
     
-    while(size_count != 0)
+    while(size_count != -1)
     {
-        for(vector<node>::iterator it = s_graph.begin(); it!= s_graph.end(); it++){
-            long pos = distance(s_graph.begin(), it);
-            if(asap[pos] == 0){
-                bool ready = true;
-                unsigned int max_time = 0;
-                // check if from predecessor has all completed
-                vector<node*> from_tmp = it->get_from_list();
-                for(vector<node*>::iterator it2 = from_tmp.begin(); it2 != from_tmp.end(); it2++){
-                    long pos2 = get_distance(*(*it2));
-                    if(asap[pos2] == 0) { ready = false;    break;}
-                    else {  max_time = std::max(max_time, asap[pos2] + (*it2)->get_latency()); }
-                }
-                if(ready == true){  asap[pos]   = max_time; size_count --;}
-            }
-            
-        }
+		for (vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++) {
+			long pos = distance(s_graph.begin(), it);
+			if (asap[pos] == 0) {
+				bool ready = true;
+				unsigned int max_time = 0;
+				// check if from predecessor has all completed
+				vector<node*> from_tmp = it->get_from_list();
+				for (vector<node*>::iterator it2 = from_tmp.begin(); it2 != from_tmp.end(); it2++) {
+					long pos2 = get_distance(*(*it2));
+					if (asap[pos2] == 0) { ready = false;    break; }
+					else { max_time = std::max(max_time, asap[pos2] + (*it2)->get_latency()); }
+				}
+				if (ready == true) { asap[pos] = max_time; size_count--; }
+			}
+
+		}
     }
 }
 
