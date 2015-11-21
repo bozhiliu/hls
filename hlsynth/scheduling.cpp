@@ -180,7 +180,7 @@ void sequence_graph::alap_schedule(unsigned int bound){
 
 void sequence_graph::force_directed_schedule(unsigned int bound){
     
-    force.resize(asap.size(), 0);
+    force.resize(asap.size()-2, 0);
     
     map<operation_type, vector<float> > probability;
     for(map<operation_type,string>::iterator it = otype_map.begin(); it != otype_map.end(); it++){
@@ -195,16 +195,16 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
     while( size_count != 0)
     {
         // Calculate type distribution
-        for(unsigned int index=0; index < asap.size(); index ++){
+        for(unsigned int index=1; index < asap.size()-1; index ++){
             operation_type curr_type = s_graph[index].get_type();
-            if(force[index] != 0)
-            {
-                probability[curr_type][force[index]] += 1;
-                continue;
-            }
+//            if(force[index-1] != 0)
+//            {
+//                probability[curr_type][force[index]] += 1;
+//                continue;
+//            }
             unsigned int left = asap[index];
             unsigned int right = alap[index];
-            float prob = 1 / (right + 1 - left);
+            float prob = 1.0 / (right + 1 - left);
             for(unsigned int it = left-1; it != right; it++){
                 probability[curr_type][it] += prob;
             }
@@ -216,7 +216,7 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
         float iteration_max_force = 0;
         unsigned int iteration_schedule = 0;
         unsigned int iteration_index = 0;
-        for(vector<node>::iterator it = s_graph.begin(); it != s_graph.end(); it++){
+        for(vector<node>::iterator it = s_graph.begin()+1; it != s_graph.end()-1; it++){
             int pos  = distance(s_graph.begin(), it);
             if(force[pos] != 0)     continue;
             
@@ -235,17 +235,19 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
             for( unsigned int index = left-1; index < right; index ++){
                 
                 // Calculate self force
-                float self = 0;
+                float self = 0.0;
                 while(sweeper < interval){
-                    if(sweeper == index)    self += (1-prob)*probability[curr_type][index];
-                    else    self += (0-prob)*probability[curr_type][index];
+                    if(sweeper == index)    self += (1-probability[curr_type][sweeper])*probability[curr_type][sweeper];
+                    else    self += (0-probability[curr_type][sweeper])*probability[curr_type][sweeper];
                     sweeper ++;
                 }
                 self_force[index - left +1] = self;
                 
                 // Calculate predecessor force
                 float pred = 0;
-                for(vector<node*>::iterator it1 = it->get_from_list().begin(); it1 != it->get_from_list().end(); it1++){
+                vector<node*> from_tmp = it->get_from_list();
+                for(vector<node*>::iterator it1 = from_tmp.begin(); it1 != from_tmp.end(); it1++){
+                    if((*it1)->get_name() == "source_node") continue;
                     int pred_pos = get_distance(**it1);
                     if(force[pred_pos] != 0)    continue;
                     unsigned int pred_left = asap[get_distance(**it1)];
@@ -256,8 +258,8 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
                     if(pred_left == pred_right_n){
                         unsigned int pred_sweeper = pred_left-1;
                         while(pred_sweeper < pred_right){
-                            if(pred_sweeper == pred_left-1)   pred += (1-1/pred_interval)*probability[pred_type][pred_sweeper];
-                            else pred += (0 - 1/pred_interval)*probability[pred_type][pred_sweeper];
+                            if(pred_sweeper == pred_left-1)   pred += (1-probability[pred_type][pred_sweeper])*probability[pred_type][pred_sweeper];
+                            else pred += (0 - probability[pred_type][pred_sweeper])*probability[pred_type][pred_sweeper];
                             pred_sweeper ++;
                         }
                     }
@@ -265,10 +267,14 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
                 
                 // Calculate successor force
                 float suc = 0;
-                for(vector<node*>::iterator it1 = it->get_to_list().begin(); it1 != it->get_to_list().end(); it1++){
+                vector<node*> to_tmp = it->get_to_list();
+                for(vector<node*>::iterator it1 = to_tmp.begin(); it1 != to_tmp.end(); it1++){
+                    if((*it1)->get_name() == "sink_node")   continue;
                     int suc_pos = get_distance(**it1);
                     if(force[suc_pos] != 0)     continue;
+                    int tt = get_distance(**it1);
                     unsigned int suc_left = asap[get_distance(**it1)];
+                    
                     unsigned int suc_right = alap[get_distance(**it1)];
                     unsigned int suc_left_n = max(index+1+(*it1)->get_latency(), suc_left);
                     unsigned int suc_interval = suc_right - suc_left +1;
@@ -276,8 +282,8 @@ void sequence_graph::force_directed_schedule(unsigned int bound){
                     if(suc_right == suc_left_n){
                         unsigned int suc_sweeper = suc_left-1;
                         while(suc_sweeper < suc_right){
-                            if(suc_sweeper == suc_right-1)   suc += (1-1/suc_interval)*probability[suc_type][suc_sweeper];
-                            else pred += (0 - 1/suc_interval)*probability[suc_type][suc_sweeper];
+                            if(suc_sweeper == suc_right-1)   suc += (1-probability[suc_type][suc_sweeper])*probability[suc_type][suc_sweeper];
+                            else pred += (0 - probability[suc_type][suc_sweeper])*probability[suc_type][suc_sweeper];
                             suc_sweeper ++;
                         }
                     }
